@@ -3,6 +3,9 @@
 #include "node_native_module.h"
 #include "util.h"
 #include <atomic>
+#include <string>
+#include <map>
+#include <iostream>
 
 #if HAVE_OPENSSL
 #define NODE_BUILTIN_OPENSSL_MODULES(V) V(crypto) V(tls_wrap)
@@ -139,6 +142,8 @@ char* wrapped_dlerror() {
 }
 
 void* wrapped_dlopen(const char* filename, int flags) {
+  std::cout << "wrapped dlopen " << filename << " " << (void *)flags << std::endl;
+  
   CHECK_NOT_NULL(filename);  // This deviates from the 'real' dlopen().
   Mutex::ScopedLock lock(dlhandles_mutex);
 
@@ -237,6 +242,7 @@ static node_module* modlist_internal;
 static node_module* modlist_linked;
 static uv_once_t init_modpending_once = UV_ONCE_INIT;
 static uv_key_t thread_local_modpending;
+std::map<std::string, std::pair<void *, bool>> dlibs;
 
 // This is set by node::Init() which is used by embedders
 bool node_is_initialized = false;
@@ -316,8 +322,16 @@ DLib::DLib(const char* filename, int flags)
 
 #ifdef __POSIX__
 bool DLib::Open() {
-  handle_ = dlopen(filename_.c_str(), flags_);
-  if (handle_ != nullptr) return true;
+  std::cout << "dlib open 1 " << filename_.c_str() << std::endl;
+  auto match = dlibs.find(filename_);
+  std::cout << "dlib open 2 " << filename_.c_str() << " " << (bool)(match != dlibs.end())<< std::endl;
+  if (match != dlibs.end()) {
+    handle_ = match->second.first;
+  } else {
+    handle_ = dlopen(filename_.c_str(), flags_);
+  }
+  if (handle_ != nullptr)
+    return true;
   errmsg_ = dlerror();
   return false;
 }
@@ -366,8 +380,13 @@ void DLib::Close() {
 }
 
 void* DLib::GetSymbolAddress(const char* name) {
+  std::cout << "dlib GetSymbolAddress 1 " << name << std::endl;
   void* address;
-  if (0 == uv_dlsym(&lib_, name, &address)) return address;
+  if (0 == uv_dlsym(&lib_, name, &address)) {
+    std::cout << "dlib GetSymbolAddress 2 " << name << " " << (void *)address << std::endl;
+    return address;
+  }
+  std::cout << "dlib GetSymbolAddress 3 " << name << " " << 0 << std::endl;
   return nullptr;
 }
 #endif  // !__POSIX__
@@ -385,6 +404,28 @@ node_module* DLib::GetSavedModuleFromGlobalHandleMap() {
 using InitializerCallback = void (*)(Local<Object> exports,
                                      Local<Value> module,
                                      Local<Context> context);
+
+inline InitializerCallback GetInternalInitializerCallback(DLib* dlib) {
+  std::cout << "GetInternalInitializerCallback 1 " << dlib->filename_ << std::endl;
+  auto match = dlibs.find(dlib->filename_);
+  std::cout << "GetInternalInitializerCallback 2 " << dlib->filename_ << " " << (bool)(match != dlibs.end() && !match->second.second) << std::endl;
+  if (match != dlibs.end() && !match->second.second) {
+    return reinterpret_cast<InitializerCallback>(match->second.first);
+  } else {
+    return nullptr;
+  }
+}
+
+inline napi_addon_register_func GetNapiInternalInitializerCallback(DLib* dlib) {
+  std::cout << "GetNapiInternalInitializerCallback 1 " << dlib->filename_ << std::endl;
+  auto match = dlibs.find(dlib->filename_);
+  std::cout << "GetNapiInternalInitializerCallback 2 " << dlib->filename_ << " " << (bool)(match != dlibs.end() && !match->second.second) << std::endl;
+  if (match != dlibs.end() && match->second.second) {
+    return reinterpret_cast<napi_addon_register_func>(match->second.first);
+  } else {
+    return nullptr;
+  }
+}
 
 inline InitializerCallback GetInitializerCallback(DLib* dlib) {
   const char* name = "node_register_module_v" STRINGIFY(NODE_MODULE_VERSION);
@@ -435,11 +476,15 @@ void DLOpen(const FunctionCallbackInfo<Value>& args) {
   }
 
   node::Utf8Value filename(env->isolate(), args[1]);  // Cast
+  std::cout << "node binding dlopen 1 " << (*filename) << std::endl;
   env->TryLoadAddon(*filename, flags, [&](DLib* dlib) {
+    std::cout << "node binding dlopen 2 " << (*filename) << std::endl;
     static Mutex dlib_load_mutex;
     Mutex::ScopedLock lock(dlib_load_mutex);
 
     const bool is_opened = dlib->Open();
+    
+    std::cout << "node binding dlopen 3 " << (*filename) << std::endl;
 
     // Objects containing v14 or later modules will have registered themselves
     // on the pending list.  Activate all of them now.  At present, only one
@@ -447,6 +492,8 @@ void DLOpen(const FunctionCallbackInfo<Value>& args) {
     node_module* mp =
         static_cast<node_module*>(uv_key_get(&thread_local_modpending));
     uv_key_set(&thread_local_modpending, nullptr);
+    
+    std::cout << "node binding dlopen 4 " << (*filename) << std::endl;
 
     if (!is_opened) {
       Local<String> errmsg =
@@ -461,17 +508,32 @@ void DLOpen(const FunctionCallbackInfo<Value>& args) {
       return false;
     }
 
+    std::cout << "node binding dlopen 5 " << (*filename) << std::endl;
+
     if (mp != nullptr) {
+      std::cout << "node binding dlopen 6 " << (*filename) << std::endl;
       mp->nm_dso_handle = dlib->handle_;
       dlib->SaveInGlobalHandleMap(mp);
     } else {
-      if (auto callback = GetInitializerCallback(dlib)) {
+      std::cout << "node binding dlopen 7 " << (*filename) << std::endl;
+      if (auto callback = GetInternalInitializerCallback(dlib)) {
+        std::cout << "node binding dlopen 8 " << (*filename) << std::endl;
+        callback(exports, module, context);
+        return true;
+      } else if (auto napi_callback = GetNapiInternalInitializerCallback(dlib)) {
+        std::cout << "node binding dlopen 9 " << (*filename) << std::endl;
+        napi_module_register_by_symbol(exports, module, context, napi_callback);
+        return true;
+      } else if (auto callback = GetInitializerCallback(dlib)) {
+        std::cout << "node binding dlopen 10 " << (*filename) << std::endl;
         callback(exports, module, context);
         return true;
       } else if (auto napi_callback = GetNapiInitializerCallback(dlib)) {
+        std::cout << "node binding dlopen 11 " << (*filename) << std::endl;
         napi_module_register_by_symbol(exports, module, context, napi_callback);
         return true;
       } else {
+        std::cout << "node binding dlopen 12 " << (*filename) << std::endl;
         mp = dlib->GetSavedModuleFromGlobalHandleMap();
         if (mp == nullptr || mp->nm_context_register_func == nullptr) {
           dlib->Close();
@@ -480,6 +542,8 @@ void DLOpen(const FunctionCallbackInfo<Value>& args) {
         }
       }
     }
+    
+    std::cout << "node binding dlopen 13 " << (*filename) << std::endl;
 
     // -1 is used for N-API modules
     if ((mp->nm_version != -1) && (mp->nm_version != NODE_MODULE_VERSION)) {

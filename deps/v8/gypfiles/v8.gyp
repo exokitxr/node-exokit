@@ -2070,7 +2070,7 @@
                   # These libraries do not exist on Mac hosted builds.
                   'libraries': [
                     '-ldl',
-                    '-lrt'
+                    # '-lrt'
                   ]
                 }]
               ]
@@ -2614,7 +2614,7 @@
             '<(SHARED_INTERMEDIATE_DIR)/torque-generated/builtins-data-view-from-dsl-gen.cc',
             '<(SHARED_INTERMEDIATE_DIR)/torque-generated/builtins-data-view-from-dsl-gen.h',
           ],
-          'action': ['<@(_inputs)', '-o', '<(SHARED_INTERMEDIATE_DIR)/torque-generated'],
+          'action': ['/bin/true'],
         },
       ],
     }, # torque
@@ -2687,6 +2687,9 @@
       ],
       'sources': [
         '../src/snapshot/mksnapshot.cc',
+        '../src/base/sys-info.cc',
+        '../src/base/debug/stack_trace.cc',
+        '../src/base/debug/stack_trace_android.cc',
       ],
       'conditions': [
         ['v8_enable_i18n_support==1', {

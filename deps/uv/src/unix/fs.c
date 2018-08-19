@@ -44,6 +44,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+// #include <ml_logging.h>
+
+#define LOG_INFO(f, s) ML_LOG_TAG(Info, LOG_TAG, (f), (s))
+#define LOG_ERROR(f, s) ML_LOG_TAG(Error, LOG_TAG, (f), (s))
 
 #if defined(__DragonFly__)        ||                                      \
     defined(__FreeBSD__)          ||                                      \
@@ -976,6 +980,7 @@ out:
 #endif
 }
 
+
 static void uv__to_stat(struct stat* src, uv_stat_t* dst) {
   dst->st_dev = src->st_dev;
   dst->st_mode = src->st_mode;
@@ -1228,6 +1233,8 @@ static ssize_t uv__fs_write_all(uv_fs_t* req) {
 }
 
 
+
+
 static void uv__fs_work(struct uv__work* w) {
   int retry_on_eintr;
   uv_fs_t* req;
@@ -1245,7 +1252,8 @@ static void uv__fs_work(struct uv__work* w) {
     r = action;                                                               \
     break;
 
-    switch (req->fs_type) {
+    // LOG_INFO("uv fs work %x", (void *)req->fs_type);
+    switch (req->fs_type) { // XXX
     X(ACCESS, access(req->path, req->flags));
     X(CHMOD, chmod(req->path, req->mode));
     X(CHOWN, chown(req->path, req->uid, req->gid));

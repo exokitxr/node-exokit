@@ -944,17 +944,7 @@ action("run_torque") {
     ]
   }
 
-  args = [
-    "./" + rebase_path(get_label_info(":torque($v8_torque_toolchain)",
-                                      "root_out_dir") + "/torque",
-                       root_build_dir),
-    "-o",
-    rebase_path("$target_gen_dir/torque-generated", root_build_dir),
-  ]
-
-  foreach(file, torque_files) {
-    args += [ rebase_path(file, root_build_dir) ]
-  }
+  args = ["/bin/true"]
 }
 
 v8_header_set("torque_generated_core") {
