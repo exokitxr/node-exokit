@@ -8,7 +8,8 @@
     'v8_random_seed%': 314159265,
     'v8_vector_stores%': 0,
     'v8_embed_script%': "",
-    'mksnapshot_exec': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)mksnapshot<(EXECUTABLE_SUFFIX)',
+    # 'mksnapshot_exec': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)mksnapshot<(EXECUTABLE_SUFFIX)',
+    'mksnapshot_exec': '/bin/true',
     'v8_os_page_size%': 0,
     'generate_bytecode_output_root': '<(SHARED_INTERMEDIATE_DIR)/generate-bytecode-output-root',
     'generate_bytecode_builtins_list_output' : '<(generate_bytecode_output_root)/builtins-generated/bytecodes-builtins-list.h',
@@ -2264,7 +2265,7 @@
                   # These libraries do not exist on Mac hosted builds.
                   'libraries': [
                     '-ldl',
-                    '-lrt'
+                    # '-lrt'
                   ]
                 }]
               ]
@@ -2655,6 +2656,9 @@
         '<(V8_ROOT)/src/snapshot/embedded-file-writer.cc',
         '<(V8_ROOT)/src/snapshot/embedded-file-writer.h',
         '<(V8_ROOT)/src/snapshot/mksnapshot.cc',
+        '<(V8_ROOT)/src/base/sys-info.cc',
+        '<(V8_ROOT)/src/base/debug/stack_trace.cc',
+        '<(V8_ROOT)/src/base/debug/stack_trace_android.cc',
       ],
       'conditions': [
         ['v8_enable_i18n_support==1', {
