@@ -15,6 +15,7 @@ cp -f torque out/Release/
 find . -type f -name '*.d' -exec sed -i 's/C:\\/\/mnt\/c\//g' "{}" +;
 find . -type f -name '*.d' -exec sed -i 's/C:/\/mnt\/c\//g' "{}" +;
 find . -type f -name '*.d' -exec sed -i 's/\([^ ]\)\\/\1\//g' "{}" +;
+git checkout src/*.d
 make -j4
 
 rm -Rf libnode.a
