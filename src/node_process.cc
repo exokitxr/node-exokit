@@ -647,5 +647,18 @@ void DebugPortSetter(Local<Name> property,
   env->inspector_host_port()->set_port(static_cast<int>(port));
 }
 
+void GetLoop(const FunctionCallbackInfo<Value>& args) {
+  uv_loop_t *loop = Environment::GetThreadLocalLoop();
+  uintptr_t loopPtr = (uintptr_t )loop;
+  uint32_t a = (uint32_t)((loopPtr >> 32) & 0xFFFFFFFF);
+  uint32_t b = (uint32_t)(loopPtr & 0xFFFFFFFF);
+
+  Isolate* isolate = Environment::GetThreadLocalIsolate();
+  Local<Array> result = Array::New(isolate, 2);
+  result->Set(0, Integer::NewFromUnsigned(isolate, a));
+  result->Set(1, Integer::NewFromUnsigned(isolate, b));
+  args.GetReturnValue().Set(result);
+}
+
 
 }  // namespace node

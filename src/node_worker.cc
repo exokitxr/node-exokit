@@ -178,6 +178,9 @@ void Worker::Run() {
         Debug(this, "Created message port for worker %llu", thread_id_);
       }
 
+      uv_key_set(&Environment::thread_local_loop, &loop_);
+      uv_key_set(&Environment::thread_local_isolate, &isolate_);
+
       if (!is_stopped()) {
         StartWorkerInspector(env_.get(), url_);
         inspector_started = true;

@@ -750,6 +750,8 @@ void GetGroups(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 void DefineZlibConstants(v8::Local<v8::Object> target);
 
+void GetLoop(const v8::FunctionCallbackInfo<v8::Value>& args);
+
 }  // namespace node
 
 #endif  // defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS

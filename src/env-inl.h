@@ -326,6 +326,14 @@ inline Environment* Environment::GetThreadLocalEnv() {
   return static_cast<Environment*>(uv_key_get(&thread_local_env));
 }
 
+inline uv_loop_t* Environment::GetThreadLocalLoop() {
+  return static_cast<uv_loop_t*>(uv_key_get(&thread_local_loop));
+}
+
+inline v8::Isolate* Environment::GetThreadLocalIsolate() {
+  return static_cast<v8::Isolate*>(uv_key_get(&thread_local_isolate));
+}
+
 inline bool Environment::profiler_idle_notifier_started() const {
   return profiler_idle_notifier_started_;
 }
