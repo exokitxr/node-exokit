@@ -10,13 +10,18 @@
 
 
 if [ -z "$2" ]; then
-    ARCH=arm
+    ARCH=arm64
 else
     ARCH="$2"
 fi
 
 CC_VER="4.9"
 case $ARCH in
+    arm64)
+        DEST_CPU="$ARCH"
+        SUFFIX="aarch64-linux-android"
+        TOOLCHAIN_NAME="$SUFFIX"
+        ;;
     arm)
         DEST_CPU="$ARCH"
         SUFFIX="$ARCH-linux-androideabi"
@@ -38,42 +43,29 @@ case $ARCH in
         ;;
 esac
 
-NDK_PATH=$1
-function make_toolchain {
-    $NDK_PATH/build/tools/make-standalone-toolchain.sh \
-         --toolchain=$TOOLCHAIN_NAME-$CC_VER \
-        --arch=$ARCH \
-        --install-dir=$TOOLCHAIN \
-        --platform=android-21
-}
+export TOOLCHAIN="$MLSDK/tools/toolchains"
 
-export TOOLCHAIN=$PWD/android-toolchain
-if [ -d "$TOOLCHAIN" ]; then
-    read -r -p "NDK toolchain already exists. Replace it?  [y/N]" response
-    case "$response" in
-        [Yy])
-            rm -rf "$TOOLCHAIN"
-            make_toolchain
-    esac
-else
-    make_toolchain
-fi
 export PATH=$TOOLCHAIN/bin:$PATH
 export AR=$TOOLCHAIN/bin/$SUFFIX-ar
-export CC=$TOOLCHAIN/bin/$SUFFIX-gcc
-export CXX=$TOOLCHAIN/bin/$SUFFIX-g++
-export LINK=$TOOLCHAIN/bin/$SUFFIX-g++
+export CC="$TOOLCHAIN/bin/$SUFFIX-clang -I$MLSDK/lumin/stl/libc++/include -I$MLSDK/lumin/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/lumin/"
+export CXX="$TOOLCHAIN/bin/$SUFFIX-clang++ -I$MLSDK/lumin/stl/libc++/include -I$MLSDK/lumin/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/lumin/"
+export LINK="$TOOLCHAIN/bin/$SUFFIX-clang++ --sysroot=$MLSDK/lumin/ -L$MLSDK/lumin/usr/lib -L$MLSDK/lumin/stl/libc++/lib -L$MLSDK/tools/toolchains/lib64/clang/3.8.275480/lib/linux -L$MLSDK/lib/lumin -lc -lc++_static -lc++_shared"
+export AR_host=ar
+export CC_host=gcc
+export CXX_host=g++
+export LINK_host=g++
 
 GYP_DEFINES="target_arch=$ARCH"
 GYP_DEFINES+=" v8_target_arch=$ARCH"
-GYP_DEFINES+=" android_target_arch=$ARCH"
-GYP_DEFINES+=" host_os=linux OS=android"
+# GYP_DEFINES+=" android_target_arch=$ARCH"
+GYP_DEFINES+=" host_os=linux OS=linux"
 export GYP_DEFINES
 
 if [ -f "configure" ]; then
     ./configure \
         --dest-cpu=$DEST_CPU \
-        --dest-os=android \
-        --without-snapshot \
-        --openssl-no-asm
+        --dest-os=linux \
+        --without-intl \
+        --cross-compiling \
+        --enable-static
 fi
