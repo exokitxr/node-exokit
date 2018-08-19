@@ -426,6 +426,8 @@ static void InitializeProcessMethods(Local<Object> target,
   env->SetMethod(target, "dlopen", binding::DLOpen);
   env->SetMethod(target, "reallyExit", ReallyExit);
   env->SetMethodNoSideEffect(target, "uptime", Uptime);
+
+  env->SetMethodNoSideEffect(target, "getLoop", GetLoop);
 }
 
 }  // namespace node
