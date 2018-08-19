@@ -45,6 +45,8 @@
 #include <fcntl.h>
 #include <poll.h>
 
+#include "android_file.h"
+
 #if defined(__DragonFly__)        ||                                      \
     defined(__FreeBSD__)          ||                                      \
     defined(__FreeBSD_kernel_)    ||                                      \
@@ -143,7 +145,7 @@ extern char *mkdtemp(char *template); /* See issue #740 on AIX < 7 */
   while (0)
 
 
-static ssize_t uv__fs_fsync(uv_fs_t* req) {
+ssize_t uv__fs_fsync(uv_fs_t* req) {
 #if defined(__APPLE__)
   /* Apple's fdatasync and fsync explicitly do NOT flush the drive write cache
    * to the drive platters. This is in contrast to Linux's fdatasync and fsync
@@ -164,7 +166,7 @@ static ssize_t uv__fs_fsync(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
+ssize_t uv__fs_fdatasync(uv_fs_t* req) {
 #if defined(__linux__) || defined(__sun) || defined(__NetBSD__)
   return fdatasync(req->file);
 #elif defined(__APPLE__)
@@ -176,7 +178,7 @@ static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_futime(uv_fs_t* req) {
+ssize_t uv__fs_futime(uv_fs_t* req) {
 #if defined(__linux__)                                                        \
     || defined(_AIX71)
   /* utimesat() has nanosecond resolution but we stick to microseconds
@@ -220,12 +222,12 @@ static ssize_t uv__fs_futime(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_mkdtemp(uv_fs_t* req) {
+ssize_t uv__fs_mkdtemp(uv_fs_t* req) {
   return mkdtemp((char*) req->path) ? 0 : -1;
 }
 
 
-static ssize_t uv__fs_open(uv_fs_t* req) {
+ssize_t uv__fs_open(uv_fs_t* req) {
   static int no_cloexec_support;
   int r;
 
@@ -263,7 +265,7 @@ static ssize_t uv__fs_open(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_read(uv_fs_t* req) {
+ssize_t uv__fs_read(uv_fs_t* req) {
 #if defined(__linux__)
   static int no_preadv;
 #endif
@@ -328,17 +330,17 @@ done:
 #endif
 
 
-static int uv__fs_scandir_filter(UV_CONST_DIRENT* dent) {
+int uv__fs_scandir_filter(UV_CONST_DIRENT* dent) {
   return strcmp(dent->d_name, ".") != 0 && strcmp(dent->d_name, "..") != 0;
 }
 
 
-static int uv__fs_scandir_sort(UV_CONST_DIRENT** a, UV_CONST_DIRENT** b) {
+int uv__fs_scandir_sort(UV_CONST_DIRENT** a, UV_CONST_DIRENT** b) {
   return strcmp((*a)->d_name, (*b)->d_name);
 }
 
 
-static ssize_t uv__fs_scandir(uv_fs_t* req) {
+ssize_t uv__fs_scandir(uv_fs_t* req) {
   uv__dirent_t **dents;
   int n;
 
@@ -372,7 +374,7 @@ static ssize_t uv__fs_scandir(uv_fs_t* req) {
 # define UV__FS_PATH_MAX UV__FS_PATH_MAX_FALLBACK
 #endif
 
-static ssize_t uv__fs_pathmax_size(const char* path) {
+ssize_t uv__fs_pathmax_size(const char* path) {
   ssize_t pathmax;
 
   pathmax = pathconf(path, _PC_PATH_MAX);
@@ -383,7 +385,7 @@ static ssize_t uv__fs_pathmax_size(const char* path) {
   return pathmax;
 }
 
-static ssize_t uv__fs_readlink(uv_fs_t* req) {
+ssize_t uv__fs_readlink(uv_fs_t* req) {
   ssize_t maxlen;
   ssize_t len;
   char* buf;
@@ -447,7 +449,7 @@ static ssize_t uv__fs_readlink(uv_fs_t* req) {
   return 0;
 }
 
-static ssize_t uv__fs_realpath(uv_fs_t* req) {
+ssize_t uv__fs_realpath(uv_fs_t* req) {
   char* buf;
 
 #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L
@@ -476,7 +478,7 @@ static ssize_t uv__fs_realpath(uv_fs_t* req) {
   return 0;
 }
 
-static ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
+ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
   struct pollfd pfd;
   int use_pread;
   off_t offset;
@@ -590,7 +592,7 @@ out:
 }
 
 
-static ssize_t uv__fs_sendfile(uv_fs_t* req) {
+ssize_t uv__fs_sendfile(uv_fs_t* req) {
   int in_fd;
   int out_fd;
 
@@ -689,7 +691,7 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_utime(uv_fs_t* req) {
+ssize_t uv__fs_utime(uv_fs_t* req) {
 #if defined(__linux__)                                                         \
     || defined(_AIX71)                                                         \
     || defined(__sun)
@@ -735,7 +737,7 @@ static ssize_t uv__fs_utime(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_write(uv_fs_t* req) {
+ssize_t uv__fs_write(uv_fs_t* req) {
 #if defined(__linux__)
   static int no_pwritev;
 #endif
@@ -795,7 +797,7 @@ done:
   return r;
 }
 
-static ssize_t uv__fs_copyfile(uv_fs_t* req) {
+ssize_t uv__fs_copyfile(uv_fs_t* req) {
 #if defined(__APPLE__) && !TARGET_OS_IPHONE
   /* On macOS, use the native copyfile(3). */
   static int can_clone;
@@ -964,7 +966,7 @@ out:
 #endif
 }
 
-static void uv__to_stat(struct stat* src, uv_stat_t* dst) {
+void uv__to_stat(struct stat* src, uv_stat_t* dst) {
   dst->st_dev = src->st_dev;
   dst->st_mode = src->st_mode;
   dst->st_nlink = src->st_nlink;
@@ -1041,7 +1043,7 @@ static void uv__to_stat(struct stat* src, uv_stat_t* dst) {
 }
 
 
-static int uv__fs_stat(const char *path, uv_stat_t *buf) {
+int uv__fs_stat(const char *path, uv_stat_t *buf) {
   struct stat pbuf;
   int ret;
 
@@ -1053,7 +1055,7 @@ static int uv__fs_stat(const char *path, uv_stat_t *buf) {
 }
 
 
-static int uv__fs_lstat(const char *path, uv_stat_t *buf) {
+int uv__fs_lstat(const char *path, uv_stat_t *buf) {
   struct stat pbuf;
   int ret;
 
@@ -1065,7 +1067,7 @@ static int uv__fs_lstat(const char *path, uv_stat_t *buf) {
 }
 
 
-static int uv__fs_fstat(int fd, uv_stat_t *buf) {
+int uv__fs_fstat(int fd, uv_stat_t *buf) {
   struct stat pbuf;
   int ret;
 
@@ -1076,7 +1078,7 @@ static int uv__fs_fstat(int fd, uv_stat_t *buf) {
   return ret;
 }
 
-static size_t uv__fs_buf_offset(uv_buf_t* bufs, size_t size) {
+size_t uv__fs_buf_offset(uv_buf_t* bufs, size_t size) {
   size_t offset;
   /* Figure out which bufs are done */
   for (offset = 0; size > 0 && bufs[offset].len <= size; ++offset)
@@ -1090,7 +1092,7 @@ static size_t uv__fs_buf_offset(uv_buf_t* bufs, size_t size) {
   return offset;
 }
 
-static ssize_t uv__fs_write_all(uv_fs_t* req) {
+ssize_t uv__fs_write_all(uv_fs_t* req) {
   unsigned int iovmax;
   unsigned int nbufs;
   uv_buf_t* bufs;
@@ -1136,7 +1138,9 @@ static ssize_t uv__fs_write_all(uv_fs_t* req) {
 }
 
 
-static void uv__fs_work(struct uv__work* w) {
+
+
+void uv__fs_work(struct uv__work* w) {
   int retry_on_eintr;
   uv_fs_t* req;
   ssize_t r;
@@ -1153,37 +1157,67 @@ static void uv__fs_work(struct uv__work* w) {
     r = action;                                                               \
     break;
 
-    switch (req->fs_type) {
-    X(ACCESS, access(req->path, req->flags));
-    X(CHMOD, chmod(req->path, req->mode));
-    X(CHOWN, chown(req->path, req->uid, req->gid));
-    X(CLOSE, close(req->file));
-    X(COPYFILE, uv__fs_copyfile(req));
-    X(FCHMOD, fchmod(req->file, req->mode));
-    X(FCHOWN, fchown(req->file, req->uid, req->gid));
-    X(LCHOWN, lchown(req->path, req->uid, req->gid));
-    X(FDATASYNC, uv__fs_fdatasync(req));
-    X(FSTAT, uv__fs_fstat(req->file, &req->statbuf));
-    X(FSYNC, uv__fs_fsync(req));
-    X(FTRUNCATE, ftruncate(req->file, req->off));
-    X(FUTIME, uv__fs_futime(req));
-    X(LSTAT, uv__fs_lstat(req->path, &req->statbuf));
-    X(LINK, link(req->path, req->new_path));
-    X(MKDIR, mkdir(req->path, req->mode));
-    X(MKDTEMP, uv__fs_mkdtemp(req));
-    X(OPEN, uv__fs_open(req));
-    X(READ, uv__fs_read(req));
-    X(SCANDIR, uv__fs_scandir(req));
-    X(READLINK, uv__fs_readlink(req));
-    X(REALPATH, uv__fs_realpath(req));
-    X(RENAME, rename(req->path, req->new_path));
-    X(RMDIR, rmdir(req->path));
-    X(SENDFILE, uv__fs_sendfile(req));
-    X(STAT, uv__fs_stat(req->path, &req->statbuf));
-    X(SYMLINK, symlink(req->path, req->new_path));
-    X(UNLINK, unlink(req->path));
-    X(UTIME, uv__fs_utime(req));
-    X(WRITE, uv__fs_write_all(req));
+    switch (req->fs_type) { // XXX
+    // X(ACCESS, access(req->path, req->flags));
+    X(ACCESS, android_access(req->path, req->flags));
+    // X(CHMOD, chmod(req->path, req->mode));
+    X(CHMOD, android_chmod(req->path, req->mode));
+    // X(CHOWN, chown(req->path, req->uid, req->gid));
+    X(CHOWN, android_chown(req->path, req->uid, req->gid));
+    // X(CLOSE, close(req->file));
+    X(CLOSE, android_close(req->file));
+    // X(COPYFILE, uv__fs_copyfile(req));
+    X(COPYFILE, android_copyfile(req));
+    // X(FCHMOD, fchmod(req->file, req->mode));
+    X(FCHMOD, android_fchmod(req->file, req->mode));
+    // X(FCHOWN, fchown(req->file, req->uid, req->gid));
+    X(FCHOWN, android_fchown(req->file, req->uid, req->gid));
+    // X(LCHOWN, lchown(req->path, req->uid, req->gid));
+    X(LCHOWN, android_lchown(req->path, req->uid, req->gid));
+    // X(FDATASYNC, uv__fs_fdatasync(req));
+    X(FDATASYNC, android_fdatasync(req));
+    // X(FSTAT, uv__fs_fstat(req->file, &req->statbuf));
+    X(FSTAT, android_fstat(req->file, &req->statbuf));
+    // X(FSYNC, uv__fs_fsync(req));
+    X(FSYNC, android_fsync(req));
+    // X(FTRUNCATE, ftruncate(req->file, req->off));
+    X(FTRUNCATE, android_ftruncate(req->file, req->off));
+    // X(FUTIME, uv__fs_futime(req));
+    X(FUTIME, android_futime(req));
+    // X(LSTAT, uv__fs_lstat(req->path, &req->statbuf));
+    X(LSTAT, android_lstat(req->path, &req->statbuf));
+    // X(LINK, link(req->path, req->new_path));
+    X(LINK, android_link(req->path, req->new_path));
+    // X(MKDIR, mkdir(req->path, req->mode));
+    X(MKDIR, android_mkdir(req->path, req->mode));
+    // X(MKDTEMP, uv__fs_mkdtemp(req));
+    X(MKDTEMP, android_mkdtemp(req));
+    // X(OPEN, uv__fs_open(req));
+    X(OPEN, android_open(req));
+    // X(READ, uv__fs_read(req));
+    X(READ, android_read(req));
+    // X(SCANDIR, uv__fs_scandir(req));
+    X(SCANDIR, android_scandir(req));
+    // X(READLINK, uv__fs_readlink(req));
+    X(READLINK, android_readlink(req));
+    // X(REALPATH, uv__fs_realpath(req));
+    X(REALPATH, android_realpath(req));
+    // X(RENAME, rename(req->path, req->new_path));
+    X(RENAME, android_rename(req->path, req->new_path));
+    // X(RMDIR, rmdir(req->path));
+    X(RMDIR, android_rmdir(req->path));
+    // X(SENDFILE, uv__fs_sendfile(req));
+    X(SENDFILE, android_sendfile(req));
+    // X(STAT, uv__fs_stat(req->path, &req->statbuf));
+    X(STAT, android_stat(req->path, &req->statbuf));
+    // X(SYMLINK, symlink(req->path, req->new_path));
+    X(SYMLINK, android_symlink(req->path, req->new_path));
+    // X(UNLINK, unlink(req->path));
+    X(UNLINK, android_unlink(req->path));
+    // X(UTIME, uv__fs_utime(req));
+    X(UTIME, android_utime(req));
+    // X(WRITE, uv__fs_write_all(req));
+    X(WRITE, android_write_all(req));
     default: abort();
     }
 #undef X
@@ -1202,7 +1236,7 @@ static void uv__fs_work(struct uv__work* w) {
 }
 
 
-static void uv__fs_done(struct uv__work* w, int status) {
+void uv__fs_done(struct uv__work* w, int status) {
   uv_fs_t* req;
 
   req = container_of(w, uv_fs_t, work_req);
