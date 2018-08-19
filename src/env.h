@@ -741,6 +741,8 @@ class Environment {
 
   static uv_key_t thread_local_env;
   static inline Environment* GetThreadLocalEnv();
+  static inline uv_loop_t* GetThreadLocalLoop();
+  static inline v8::Isolate* GetThreadLocalIsolate();
 
   Environment(IsolateData* isolate_data,
               v8::Local<v8::Context> context,
