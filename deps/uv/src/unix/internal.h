@@ -22,6 +22,9 @@
 #ifndef UV_UNIX_INTERNAL_H_
 #define UV_UNIX_INTERNAL_H_
 
+#undef ANDROID
+#undef __ANDROID__
+
 #include "uv-common.h"
 
 #include <assert.h>
