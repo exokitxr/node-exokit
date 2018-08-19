@@ -19,6 +19,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#include <string>
+#include <map>
 #include "node_buffer.h"
 #include "node_constants.h"
 #include "node_context_data.h"
@@ -867,6 +869,8 @@ node_module* get_linked_module(const char* name) {
   return FindModule(modlist_linked, name, NM_F_LINKED);
 }
 
+std::map<std::string, void *> dlibs;
+
 class DLib {
  public:
 #ifdef __POSIX__
@@ -893,10 +897,14 @@ class DLib {
   DISALLOW_COPY_AND_ASSIGN(DLib);
 };
 
-
 #ifdef __POSIX__
 bool DLib::Open() {
-  handle_ = dlopen(filename_.c_str(), flags_);
+  auto match = dlibs.find(filename_);
+  if (match != dlibs.end()) {
+    handle_ = (*match).second;
+  } else {
+    handle_ = dlopen(filename_.c_str(), flags_);
+  }
   if (handle_ != nullptr)
     return true;
   errmsg_ = dlerror();
@@ -940,6 +948,15 @@ void* DLib::GetSymbolAddress(const char* name) {
 using InitializerCallback = void (*)(Local<Object> exports,
                                      Local<Value> module,
                                      Local<Context> context);
+
+inline InitializerCallback GetInternalInitializerCallback(DLib* dlib) {
+  auto match = dlibs.find(dlib->filename_);
+  if (match != dlibs.end()) {
+    return reinterpret_cast<InitializerCallback>((*match).second);
+  } else {
+    return nullptr;
+  }
+}
 
 inline InitializerCallback GetInitializerCallback(DLib* dlib) {
   const char* name = "node_register_module_v" STRINGIFY(NODE_MODULE_VERSION);
@@ -1013,7 +1030,9 @@ static void DLOpen(const FunctionCallbackInfo<Value>& args) {
   }
 
   if (mp == nullptr) {
-    if (auto callback = GetInitializerCallback(&dlib)) {
+    if (auto callback = GetInternalInitializerCallback(&dlib)) {
+      callback(exports, module, context);
+    } else if (auto callback = GetInitializerCallback(&dlib)) {
       callback(exports, module, context);
     } else if (auto napi_callback = GetNapiInitializerCallback(&dlib)) {
       napi_module_register_by_symbol(exports, module, context, napi_callback);
