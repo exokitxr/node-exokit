@@ -22,9 +22,6 @@
 #ifndef UV_UNIX_INTERNAL_H_
 #define UV_UNIX_INTERNAL_H_
 
-#undef ANDROID
-#undef __ANDROID__
-
 #include "uv-common.h"
 
 #include <assert.h>
@@ -63,13 +60,13 @@
 # include <AvailabilityMacros.h>
 #endif
 
-#if defined(__ANDROID__)
+/* #if defined(__ANDROID__)
 int uv__pthread_sigmask(int how, const sigset_t* set, sigset_t* oset);
 # ifdef pthread_sigmask
 # undef pthread_sigmask
 # endif
 # define pthread_sigmask(how, set, oldset) uv__pthread_sigmask(how, set, oldset)
-#endif
+#endif */
 
 #define ACCESS_ONCE(type, var)                                                \
   (*(volatile type*) &(var))
