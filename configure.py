@@ -1118,6 +1118,22 @@ def configure_node(o):
   else:
     o['variables']['node_target_type'] = 'executable'
 
+  o['include_dirs'] += ['/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/stl/libc++/include']
+  o['include_dirs'] += ['/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/usr/include']
+  o['include_dirs'] += ['deps/cares/include']
+  # o['libraries'] += ['-Wl,-L/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/usr/lib']
+  # o['libraries'] += ['--sysroot=/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/']
+  o['cflags'] += ['--sysroot=/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/']
+  # o['cflags'] += ['-std=c++1y']
+  o['ldflags'] += ['--sysroot=/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/']
+  o['libraries'] += ['-L/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/usr/lib']
+  o['libraries'] += ['-L/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/stl/libc++/lib']
+  o['libraries'] += ['-L/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/tools/toolchains/lib64/clang/3.8.275480/lib/linux']
+  o['libraries'] += ['-lc']
+  o['libraries'] += ['-lc++_static']
+  o['libraries'] += ['-lc++_shared']
+  o['defines'] += ['LUMIN']
+
   o['variables']['node_experimental_http_parser'] = \
       b(options.experimental_http_parser)
 
@@ -1581,6 +1597,7 @@ output = {
   'libraries': [],
   'defines': [],
   'cflags': [],
+  'ldflags': [],
 }
 
 # Print a warning when the compiler is too old.
