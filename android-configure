@@ -65,8 +65,6 @@ if [ -f "configure" ]; then
     ./configure \
         --dest-cpu=$DEST_CPU \
         --dest-os=linux \
-        --without-snapshot \
-        --openssl-no-asm \
         --without-intl \
         --cross-compiling \
         --enable-static
