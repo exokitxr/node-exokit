@@ -13,10 +13,18 @@ rm -Rf out
 make -j4
 
 cp -f torque out/Release/
-read -r -d '' s <<lol
-process.argv.slice(1).forEach(p => {fs.writeFileSync(p, (x=fs.readFileSync(p, 'utf8').replace(/\r\n/gm, '\n').replace(/\r/gm, '\n'), y=x.replace(/([\\\\\/][_\-\.a-zA-Z0-9]+)\n(:)/gm, (all,
-a, b) => a + b).replace(/(\.?[a-zA-Z]+):/g, (all, a) => /^[a-zA-Z]$/.test(a) ? ('/mnt/' + a.toLowerCase() + '/') : all).replace(/\/+/gm, '/')))})
-lol
+read -r -d '' s <<eof
+process.argv.slice(1).forEach(p => {
+  fs.writeFileSync(p,
+    fs.readFileSync(p, 'utf8')
+      .replace(/\r\n/gm, '\n')
+      .replace(/\r/gm, '\n')
+      .replace(/([\\\\\/][_\-\.a-zA-Z0-9]+)\n(:)/gm, (all, a, b) => a + b)
+      .replace(/(\.?[a-zA-Z]+):/g, (all, a) => /^[a-zA-Z]$/.test(a) ? ('/mnt/' + a.toLowerCase() + '/') : all)
+      .replace(/\/+/gm, '/')
+  );
+})
+eof
 find out -type f -name '*.d' -exec node -e "$s" "{}" +;
 # f=ares_getopt.o.d
 # find out -type f -name '*.d' -exec mac2unix "{}" +;
