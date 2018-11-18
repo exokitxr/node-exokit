@@ -12,7 +12,6 @@ rm -Rf out
 ./android-configure
 make -j4
 
-cp -f torque out/Release/
 read -r -d '' s <<eof
 process.argv.slice(1).forEach(p => {
   fs.writeFileSync(p,
@@ -25,15 +24,15 @@ process.argv.slice(1).forEach(p => {
   );
 })
 eof
-find out -type f -name '*.d' -exec node -e "$s" "{}" +;
+find 'out/Release/.deps//mnt/c/Users/avaer/Documents/GitHub/node-magicleap/out/Release/obj.target' -type f -name '*.o.d' -exec node -e "$s" "{}" +;
 # f=ares_getopt.o.d
 # find out -type f -name '*.d' -exec mac2unix "{}" +;
 # find out -type f -name '*.d' -exec sed -i 's/\([^ ]\)\\/\1\//g' "{}" +;
 # find out -type f -name '*.d' -exec sed -i 's/\(^\|[^\.]\|[^\.][^\.]\)c:/\1\/mnt\/c\//g' "{}" +;
 # find out -type f -name "$f" -exec sed -i ':a;N;$!ba;s/\\\n:\n/\n/g' "{}" +;
 # find out -type f -name '*.d' -exec sed -i ':a;N;$!ba;s/\(\.[a-z]+\)\n:/\1:/g' "{}" +;
-# git checkout src/v8ustack.d
+# git checkout src/*.d
 make -j4
 
-rm -Rf libnode.a
+rm -f libnode.a
 /mnt/c/Users/avaer/MagicLeap/mlsdk/v0.16.0/tools/toolchains/bin/aarch64-linux-android-ar -M <libnode.mri
