@@ -47,9 +47,9 @@ export TOOLCHAIN="$MLSDK/tools/toolchains"
 
 export PATH=$TOOLCHAIN/bin:$PATH
 export AR=$TOOLCHAIN/bin/$SUFFIX-ar
-export CC="$TOOLCHAIN/bin/$SUFFIX-clang -I/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/stl/libc++/include -I/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/usr/include -Ideps/cares/include --sysroot=/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/"
-export CXX="$TOOLCHAIN/bin/$SUFFIX-clang++ -I/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/stl/libc++/include -I/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/usr/include -Ideps/cares/include --sysroot=/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/"
-export LINK="$TOOLCHAIN/bin/$SUFFIX-clang++ --sysroot=/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/ -L/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/usr/lib -L/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/lumin/stl/libc++/lib -L/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.18.0/tools/toolchains/lib64/clang/3.8.275480/lib/linux -lc -lc++_static -lc++_shared"
+export CC="$TOOLCHAIN/bin/$SUFFIX-clang -I$MLSDK/lumin/stl/libc++/include -I$MLSDKlumin/usr/include -Ideps/cares/include --sysroot=$MLSDK/lumin/"
+export CXX="$TOOLCHAIN/bin/$SUFFIX-clang++ -I$MLSDK/lumin/stl/libc++/include -I$MLSDK/lumin/usr/include -Ideps/cares/include --sysroot=$MLSDK/lumin/"
+export LINK="$TOOLCHAIN/bin/$SUFFIX-clang++ --sysroot=$MLSDK/lumin/ -L$MLSDK/lumin/usr/lib -L$MLSDK/lumin/stl/libc++/lib -L$MLSDK/tools/toolchains/lib64/clang/3.8.275480/lib/linux -lc -lc++_static -lc++_shared"
 export AR_host=ar
 export CC_host=gcc
 export CXX_host=g++
