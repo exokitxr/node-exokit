@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export MLSDK="${MLSDK:-/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.19.0}"
+
 git checkout base
 ./configure
 make -j4
