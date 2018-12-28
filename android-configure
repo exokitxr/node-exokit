@@ -43,7 +43,7 @@ case $ARCH in
         ;;
 esac
 
-export TOOLCHAIN=/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.16.0/tools/toolchains
+export TOOLCHAIN="$MLSDK/tools/toolchains"
 
 export PATH=$TOOLCHAIN/bin:$PATH
 export AR=$TOOLCHAIN/bin/$SUFFIX-ar
