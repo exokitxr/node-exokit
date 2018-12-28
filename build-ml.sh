@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 export MLSDK="${MLSDK:-/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.19.0}"
 
 git checkout base
