@@ -37,4 +37,4 @@ find 'out/Release/.deps//mnt/c/Users/avaer/Documents/GitHub/node-magicleap/out/R
 make -j4
 
 rm -f libnode.a
-/mnt/c/Users/avaer/MagicLeap/mlsdk/v0.16.0/tools/toolchains/bin/aarch64-linux-android-ar -M <libnode.mri
+"$MLSDK/tools/toolchains/bin/aarch64-linux-android-ar" -M <libnode.mri
