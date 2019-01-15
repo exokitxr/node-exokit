@@ -102,6 +102,7 @@ static node_module* modlist_linked;
 static node_module* modlist_addon;
 static uv_once_t init_modpending_once = UV_ONCE_INIT;
 static uv_key_t thread_local_modpending;
+std::map<std::string, void *> dlibs;
 
 // This is set by node::Init() which is used by embedders
 bool node_is_initialized = false;
@@ -155,8 +156,6 @@ class DLib {
 };
 
 #ifdef __POSIX__
-std::map<std::string, void *> dlibs;
-
 bool DLib::Open() {
   auto match = dlibs.find(filename_);
   if (match != dlibs.end()) {
