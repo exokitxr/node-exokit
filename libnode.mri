@@ -2,6 +2,7 @@ create libnode.a
 addlib ./out/Release/obj.target/deps/cares/libcares.a
 addlib ./out/Release/obj.target/deps/gtest/libgtest.a
 addlib ./out/Release/obj.target/deps/http_parser/libhttp_parser.a
+addlib ./out/Release/obj.target/deps/llhttp/libllhttp.a
 addlib ./out/Release/obj.target/deps/nghttp2/libnghttp2.a
 addlib ./out/Release/obj.target/deps/openssl/libopenssl.a
 addlib ./out/Release/obj.target/deps/uv/libuv.a
