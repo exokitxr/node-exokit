@@ -1,6 +1,8 @@
 #include "node_binding.h"
 #include "node_internals.h"
 #include "node_native_module.h"
+#include <string>
+#include <map>
 
 #if defined(__POSIX__)
 #include <dlfcn.h>
@@ -153,9 +155,17 @@ class DLib {
 };
 
 #ifdef __POSIX__
+std::map<std::string, void *> dlibs;
+
 bool DLib::Open() {
-  handle_ = dlopen(filename_.c_str(), flags_);
-  if (handle_ != nullptr) return true;
+  auto match = dlibs.find(filename_);
+  if (match != dlibs.end()) {
+    handle_ = (*match).second;
+  } else {
+    handle_ = dlopen(filename_.c_str(), flags_);
+  }
+  if (handle_ != nullptr)
+    return true;
   errmsg_ = dlerror();
   return false;
 }
