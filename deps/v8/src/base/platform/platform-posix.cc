@@ -33,6 +33,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <ml_logging.h>
 
 #ifdef LUMIN
 #include <ml_logging.h>
@@ -604,7 +605,7 @@ void OS::VPrint(const char* format, va_list args) {
 #if defined(ANDROID) && !defined(V8_ANDROID_LOG_STDOUT)
   __android_log_vprint(ANDROID_LOG_INFO, LOG_TAG, format, args);
 #else
-  vprintf(format, args);
+  ML_LOG(Info, format, args);
 #endif
 }
 
@@ -621,7 +622,7 @@ void OS::VFPrint(FILE* out, const char* format, va_list args) {
 #if defined(ANDROID) && !defined(V8_ANDROID_LOG_STDOUT)
   __android_log_vprint(ANDROID_LOG_INFO, LOG_TAG, format, args);
 #else
-  vfprintf(out, format, args);
+  ML_LOG(Info, format, args);
 #endif
 }
 
@@ -638,7 +639,7 @@ void OS::VPrintError(const char* format, va_list args) {
 #if defined(ANDROID) && !defined(V8_ANDROID_LOG_STDOUT)
   __android_log_vprint(ANDROID_LOG_ERROR, LOG_TAG, format, args);
 #else
-  vfprintf(stderr, format, args);
+  ML_LOG(Error, format, args);
 #endif
 }
 
