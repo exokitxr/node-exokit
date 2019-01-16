@@ -34,6 +34,10 @@
 #include <cmath>
 #include <cstdlib>
 
+#ifdef LUMIN
+#include <ml_logging.h>
+#endif
+
 #include "src/base/platform/platform-posix.h"
 
 #include "src/base/lazy-instance.h"
