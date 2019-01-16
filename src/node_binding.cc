@@ -207,6 +207,15 @@ using InitializerCallback = void (*)(Local<Object> exports,
                                      Local<Value> module,
                                      Local<Context> context);
 
+inline InitializerCallback GetInternalInitializerCallback(DLib* dlib) {
+  auto match = dlibs.find(dlib->filename_);
+  if (match != dlibs.end()) {
+    return reinterpret_cast<InitializerCallback>((*match).second);
+  } else {
+    return nullptr;
+  }
+}
+
 inline InitializerCallback GetInitializerCallback(DLib* dlib) {
   const char* name = "node_register_module_v" STRINGIFY(NODE_MODULE_VERSION);
   return reinterpret_cast<InitializerCallback>(dlib->GetSymbolAddress(name));
@@ -279,7 +288,9 @@ void DLOpen(const FunctionCallbackInfo<Value>& args) {
   }
 
   if (mp == nullptr) {
-    if (auto callback = GetInitializerCallback(&dlib)) {
+    if (auto callback = GetInternalInitializerCallback(&dlib)) {
+      callback(exports, module, context);
+    } else if (auto callback = GetInitializerCallback(&dlib)) {
       callback(exports, module, context);
     } else if (auto napi_callback = GetNapiInitializerCallback(&dlib)) {
       napi_module_register_by_symbol(exports, module, context, napi_callback);
