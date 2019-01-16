@@ -606,6 +606,8 @@ void OS::VPrint(const char* format, va_list args) {
 #else
 #ifdef LUMIN
   ML_LOG(Info, format, args);
+#else
+  vprintf(format, args);
 #endif
 #endif
 }
@@ -625,6 +627,8 @@ void OS::VFPrint(FILE* out, const char* format, va_list args) {
 #else
 #ifdef LUMIN
   ML_LOG(Info, format, args);
+#else
+  vfprintf(out, format, args);
 #endif
 #endif
 }
@@ -644,6 +648,8 @@ void OS::VPrintError(const char* format, va_list args) {
 #else
 #ifdef LUMIN
   ML_LOG(Error, format, args);
+#else
+  vfprintf(stderr, format, args);
 #endif
 #endif
 }

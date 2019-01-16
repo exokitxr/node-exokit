@@ -61,6 +61,8 @@ AndroidLogStream::~AndroidLogStream() {
   if (!line_buffer_.empty()) {
 #ifdef LUMIN
     ML_LOG(Info, "%s", line_buffer_.c_str());
+#else
+    __android_log_write(ANDROID_LOG_INFO, LOG_TAG, line_buffer_.c_str());
 #endif
   }
 }
@@ -77,6 +79,8 @@ std::streamsize AndroidLogStream::xsputn(const char* s, std::streamsize n) {
     // Otherwise, write out the first line, then continue.
 #ifdef LUMIN
     ML_LOG(Info, "%s", line_buffer_.c_str());
+#else
+    __android_log_write(ANDROID_LOG_INFO, LOG_TAG, line_buffer_.c_str());
 #endif
     line_buffer_.clear();
     s = newline + 1;
