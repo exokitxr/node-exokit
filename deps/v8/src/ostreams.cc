@@ -5,7 +5,10 @@
 #include "src/ostreams.h"
 #include "src/objects.h"
 #include "src/objects/string.h"
+
+#ifdef LUMIN
 #include <ml_logging.h>
+#endif
 
 #if V8_OS_WIN
 #if _MSC_VER < 1900
@@ -56,7 +59,9 @@ AndroidLogStream::~AndroidLogStream() {
   // If there is anything left in the line buffer, print it now, even though it
   // was not terminated by a newline.
   if (!line_buffer_.empty()) {
+#ifdef LUMIN
     ML_LOG(Info, "%s", line_buffer_.c_str());
+#endif
   }
 }
 
@@ -70,7 +75,9 @@ std::streamsize AndroidLogStream::xsputn(const char* s, std::streamsize n) {
     // next invocation.
     if (!newline) break;
     // Otherwise, write out the first line, then continue.
+#ifdef LUMIN
     ML_LOG(Info, "%s", line_buffer_.c_str());
+#endif
     line_buffer_.clear();
     s = newline + 1;
   }
