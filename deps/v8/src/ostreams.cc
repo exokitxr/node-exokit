@@ -17,6 +17,10 @@
 #include <android/log.h>  // NOLINT
 #endif
 
+#ifdef LUMIN
+#include <ml_logging.h>
+#endif
+
 namespace v8 {
 namespace internal {
 
@@ -32,6 +36,58 @@ int OFStreamBase::sync() {
 }
 
 
+#ifdef LUMIN
+OFStreamBase::int_type OFStreamBase::overflow(int_type c) {
+  if (c != EOF) {
+    if (f_ == stdout || f_ == stderr) {
+      buf[i] = c;
+      flush(1);
+      return c;
+    } else {
+      return std::fputc(c, f_);
+    }
+  } else {
+    return c;
+  }
+}
+
+
+std::streamsize OFStreamBase::xsputn(const char* s, std::streamsize n) {
+  if (f_ == stdout || f_ == stderr) {
+    memcpy(buf + i, s, n);
+    flush(n);
+    return n;
+  } else {
+    return static_cast<std::streamsize>(
+        std::fwrite(s, 1, static_cast<size_t>(n), f_));
+  }
+}
+
+
+void OFStreamBase::flush(std::streamsize size) {
+  for (ssize_t j = i; j < i + size; j++) {
+    if (buf[j] == '\n') {
+      buf[j] = 0;
+      if (f_ == stdout) {
+        ML_LOG(Info, "%s", buf + lineStart);
+      } else if (f_ == stderr) {
+        ML_LOG(Error, "%s", buf + lineStart);
+      }
+
+      lineStart = j + 1;
+    }
+  }
+
+  i += size;
+
+  if (i >= STDIO_BUF_SIZE) {
+    ssize_t lineLength = i - lineStart;
+    memcpy(buf, buf + lineStart, lineLength);
+    i = lineLength;
+    lineStart = 0;
+  }
+}
+#else
 OFStreamBase::int_type OFStreamBase::overflow(int_type c) {
   return (c != EOF) ? std::fputc(c, f_) : c;
 }
@@ -41,6 +97,7 @@ std::streamsize OFStreamBase::xsputn(const char* s, std::streamsize n) {
   return static_cast<std::streamsize>(
       std::fwrite(s, 1, static_cast<size_t>(n), f_));
 }
+#endif
 
 OFStream::OFStream(FILE* f) : std::ostream(nullptr), buf_(f) {
   DCHECK_NOT_NULL(f);
@@ -55,7 +112,11 @@ AndroidLogStream::~AndroidLogStream() {
   // If there is anything left in the line buffer, print it now, even though it
   // was not terminated by a newline.
   if (!line_buffer_.empty()) {
+#ifdef LUMIN
+    ML_LOG(Info, "%s", line_buffer_.c_str());
+#else
     __android_log_write(ANDROID_LOG_INFO, LOG_TAG, line_buffer_.c_str());
+#endif
   }
 }
 
@@ -69,7 +130,11 @@ std::streamsize AndroidLogStream::xsputn(const char* s, std::streamsize n) {
     // next invocation.
     if (!newline) break;
     // Otherwise, write out the first line, then continue.
+#ifdef LUMIN
+    ML_LOG(Info, "%s", line_buffer_.c_str());
+#else
     __android_log_write(ANDROID_LOG_INFO, LOG_TAG, line_buffer_.c_str());
+#endif
     line_buffer_.clear();
     s = newline + 1;
   }
