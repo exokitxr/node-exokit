@@ -1118,8 +1118,6 @@ def configure_node(o):
   else:
     o['variables']['node_target_type'] = 'executable'
 
-  o['defines'] += ['LUMIN']
-
   o['variables']['node_experimental_http_parser'] = \
       b(options.experimental_http_parser)
 
