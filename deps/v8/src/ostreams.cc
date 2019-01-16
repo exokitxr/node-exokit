@@ -5,6 +5,7 @@
 #include "src/ostreams.h"
 #include "src/objects.h"
 #include "src/objects/string.h"
+#include <ml_logging.h>
 
 #if V8_OS_WIN
 #if _MSC_VER < 1900
@@ -55,7 +56,7 @@ AndroidLogStream::~AndroidLogStream() {
   // If there is anything left in the line buffer, print it now, even though it
   // was not terminated by a newline.
   if (!line_buffer_.empty()) {
-    __android_log_write(ANDROID_LOG_INFO, LOG_TAG, line_buffer_.c_str());
+    ML_LOG(Info, "%s", line_buffer_.c_str());
   }
 }
 
@@ -69,7 +70,7 @@ std::streamsize AndroidLogStream::xsputn(const char* s, std::streamsize n) {
     // next invocation.
     if (!newline) break;
     // Otherwise, write out the first line, then continue.
-    __android_log_write(ANDROID_LOG_INFO, LOG_TAG, line_buffer_.c_str());
+    ML_LOG(Info, "%s", line_buffer_.c_str());
     line_buffer_.clear();
     s = newline + 1;
   }
