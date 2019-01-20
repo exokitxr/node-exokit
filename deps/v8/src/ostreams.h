@@ -15,14 +15,8 @@
 #include "src/base/macros.h"
 #include "src/globals.h"
 
-#ifdef LUMIN
-#include <ml_logging.h>
-#endif
-
 namespace v8 {
 namespace internal {
-
-constexpr ssize_t STDIO_BUF_SIZE = 64 * 1024;
 
 class OFStreamBase : public std::streambuf {
  public:
@@ -35,13 +29,6 @@ class OFStreamBase : public std::streambuf {
   int sync() override;
   int_type overflow(int_type c) override;
   std::streamsize xsputn(const char* s, std::streamsize n) override;
-#ifdef LUMIN
-  void flush(std::streamsize size);
-#endif
-
-  char buf[STDIO_BUF_SIZE + 1];
-  ssize_t i = 0;
-  ssize_t lineStart = 0;
 };
 
 // An output stream writing to a file.

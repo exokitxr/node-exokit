@@ -604,11 +604,7 @@ void OS::VPrint(const char* format, va_list args) {
 #if defined(ANDROID) && !defined(V8_ANDROID_LOG_STDOUT)
   __android_log_vprint(ANDROID_LOG_INFO, LOG_TAG, format, args);
 #else
-#ifdef LUMIN
-  ML_LOG(Info, format, args);
-#else
   vprintf(format, args);
-#endif
 #endif
 }
 
@@ -625,11 +621,7 @@ void OS::VFPrint(FILE* out, const char* format, va_list args) {
 #if defined(ANDROID) && !defined(V8_ANDROID_LOG_STDOUT)
   __android_log_vprint(ANDROID_LOG_INFO, LOG_TAG, format, args);
 #else
-#ifdef LUMIN
-  ML_LOG(Info, format, args);
-#else
   vfprintf(out, format, args);
-#endif
 #endif
 }
 
@@ -646,11 +638,7 @@ void OS::VPrintError(const char* format, va_list args) {
 #if defined(ANDROID) && !defined(V8_ANDROID_LOG_STDOUT)
   __android_log_vprint(ANDROID_LOG_ERROR, LOG_TAG, format, args);
 #else
-#ifdef LUMIN
-  ML_LOG(Error, format, args);
-#else
   vfprintf(stderr, format, args);
-#endif
 #endif
 }
 
