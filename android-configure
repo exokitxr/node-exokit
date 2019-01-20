@@ -49,7 +49,7 @@ export PATH=$TOOLCHAIN/bin:$PATH
 export AR=$TOOLCHAIN/bin/$SUFFIX-ar
 export CC="$TOOLCHAIN/bin/$SUFFIX-clang -I$MLSDK/lumin/stl/libc++/include -I$MLSDK/lumin/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/lumin/"
 export CXX="$TOOLCHAIN/bin/$SUFFIX-clang++ -I$MLSDK/lumin/stl/libc++/include -I$MLSDK/lumin/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/lumin/"
-export LINK="$TOOLCHAIN/bin/$SUFFIX-clang++ --sysroot=$MLSDK/lumin/ -L$MLSDK/lumin/usr/lib -L$MLSDK/lumin/stl/libc++/lib -L$MLSDK/tools/toolchains/lib64/clang/3.8.275480/lib/linux -L$MLSDK/lib/lumin -lc -lc++_static -lc++_shared -llog -lml_ext_logging"
+export LINK="$TOOLCHAIN/bin/$SUFFIX-clang++ --sysroot=$MLSDK/lumin/ -L$MLSDK/lumin/usr/lib -L$MLSDK/lumin/stl/libc++/lib -L$MLSDK/tools/toolchains/lib64/clang/3.8.275480/lib/linux -L$MLSDK/lib/lumin -lc -lc++_static -lc++_shared"
 export AR_host=ar
 export CC_host=gcc
 export CXX_host=g++
