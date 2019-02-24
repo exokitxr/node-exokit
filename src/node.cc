@@ -1205,6 +1205,8 @@ void SetupProcessObject(Environment* env,
   env->SetMethodNoSideEffect(process, "getegid", GetEGid);
   env->SetMethodNoSideEffect(process, "getgroups", GetGroups);
 #endif  // __POSIX__ && !defined(__ANDROID__) && !defined(__CloudABI__)
+
+  env->SetMethod(process, "requireNative", RequireNative);
 }
 
 

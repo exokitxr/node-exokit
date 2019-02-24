@@ -647,5 +647,16 @@ void DebugPortSetter(Local<Name> property,
   env->inspector_host_port()->set_port(static_cast<int>(port));
 }
 
+void RequireNative(const FunctionCallbackInfo<Value>& info) {
+  Local<Array> requireAddressValue = Local<Array>::Cast(info[0]);
+  uintptr_t requireAddress = ((uint64_t)requireAddressValue->Get(0)->Uint32Value() << 32) | ((uint64_t)requireAddressValue->Get(1)->Uint32Value() & 0xFFFFFFFF);
+
+  void (*Init)(Handle<Object>) = (void (*)(Handle<Object>))requireAddress;
+
+  Local<Object> exportsObj = Nan::New<Object>();
+  Init(exportsObj);
+  return info.GetReturnValue().Set(exportsObj);
+}
+
 
 }  // namespace node
