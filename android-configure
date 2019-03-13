@@ -43,13 +43,13 @@ case $ARCH in
         ;;
 esac
 
-export TOOLCHAIN="$MLSDK/tools/toolchains"
+export TOOLCHAIN="$MLSDK"
 
 export PATH=$TOOLCHAIN/bin:$PATH
 export AR=$TOOLCHAIN/bin/$SUFFIX-ar
-export CC="$TOOLCHAIN/bin/$SUFFIX-clang -I$MLSDK/lumin/stl/libc++/include -I$MLSDK/lumin/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/lumin/"
-export CXX="$TOOLCHAIN/bin/$SUFFIX-clang++ -I$MLSDK/lumin/stl/libc++/include -I$MLSDK/lumin/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/lumin/"
-export LINK="$TOOLCHAIN/bin/$SUFFIX-clang++ --sysroot=$MLSDK/lumin/ -L$MLSDK/lumin/usr/lib -L$MLSDK/lumin/stl/libc++/lib -L$MLSDK/tools/toolchains/lib64/clang/3.8.275480/lib/linux -L$MLSDK/lib/lumin -lc -lc++_static -lc++_shared"
+export CC="$TOOLCHAIN/bin/$SUFFIX-clang -I$MLSDK/sysroot/usr/include/c++/v1 -I$MLSDK/sysroot/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/sysroot/"
+export CXX="$TOOLCHAIN/bin/$SUFFIX-clang++ -I$MLSDK/sysroot/usr/include/c__/v1 -I$MLSDK/sysroot/usr/include -I$MLSDK/include -Ideps/cares/include -DLUMIN=1 --sysroot=$MLSDK/sysroot/"
+export LINK="$TOOLCHAIN/bin/$SUFFIX-clang++ --sysroot=$MLSDK/sysroot/ -L$MLSDK/sysroot/usr/lib -L$MLSDK/sysroot/usr/lib/aarch64-linux-android/28 -L$MLSDK/tools/toolchains/lib64/clang/3.8.275480/lib/linux -L$MLSDK/lib/lib64 -lc -lc++_static -lc++_shared"
 export AR_host=ar
 export CC_host=gcc
 export CXX_host=g++
@@ -58,7 +58,7 @@ export LINK_host=g++
 GYP_DEFINES="target_arch=$ARCH"
 GYP_DEFINES+=" v8_target_arch=$ARCH"
 # GYP_DEFINES+=" android_target_arch=$ARCH"
-GYP_DEFINES+=" host_os=linux OS=linux"
+GYP_DEFINES+=" host_os=linux OS=android"
 export GYP_DEFINES
 
 if [ -f "configure" ]; then
