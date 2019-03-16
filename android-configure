@@ -13,9 +13,10 @@ TOOLCHAIN_NAME="$SUFFIX"
 
 # Add the standalone toolchain to the search path.
 export PATH=$PATH:/home/chris/github/the-toolchain/bin
+export toolchain_bin=/home/chris/github/the-toolchain/bin
 
 # Tell configure what tools to use.
-target_host=aarch64-linux-android
+target_host=$toolchain_bin/aarch64-linux-android
 export AR=$target_host-ar
 export AS=$target_host-clang
 export CC=$target_host-clang
@@ -36,8 +37,9 @@ export GYP_DEFINES
 
 if [ -f "configure" ]; then
     ./configure \
-        --dest-cpu=$DEST_CPU \
+        --dest-cpu=arm64 \
         --dest-os=android \
-        --without-snapshot \
-        --openssl-no-asm
+        --without-intl \
+        --cross-compiling \
+        --enable-static
 fi
