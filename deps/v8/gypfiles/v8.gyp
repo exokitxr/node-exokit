@@ -2064,8 +2064,8 @@
                   # library order and break (see crbug.com/469973).
                   # These libraries do not exist on Mac hosted builds.
                   'libraries': [
-                    '-ldl',
-                    '-lrt'
+                    '-ldl'
+                    #'-lrt'
                   ]
                 }]
               ]
