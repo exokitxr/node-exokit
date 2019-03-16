@@ -6,7 +6,7 @@
 # 'npm config set arch=<arch>'
 
 ARCH=aarch64
-DEST_CPU="$ARCH"
+DEST_CPU=arm64
 SUFFIX="$ARCH-linux-android"
 TOOLCHAIN_NAME="$SUFFIX"
 
@@ -30,16 +30,18 @@ export LDFLAGS="-pie"
 
 
 GYP_DEFINES="target_arch=$ARCH"
-GYP_DEFINES+=" v8_target_arch=$ARCH"
+GYP_DEFINES+=" v8_target_arch=$DEST_CPU"
 GYP_DEFINES+=" android_target_arch=$ARCH"
 GYP_DEFINES+=" host_os=linux OS=android"
 export GYP_DEFINES
 
 if [ -f "configure" ]; then
     ./configure \
-        --dest-cpu=arm64 \
+        --dest-cpu=$DEST_CPU \
         --dest-os=android \
         --without-intl \
+        --without-snapshot \
+        --openssl-no-asm \
         --cross-compiling \
         --enable-static
 fi
