@@ -544,6 +544,9 @@
         '<(SHARED_INTERMEDIATE_DIR)/extras-libraries.cc',
         '../src/setup-isolate-deserialize.cc',
       ],
+      'xcode_settings': {
+        'GCC_GENERATE_DEBUGGING_SYMBOLS': 'NO',
+      },
       'actions': [
         {
           'action_name': 'run_mksnapshot',
