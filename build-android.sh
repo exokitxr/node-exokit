@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export toolchain='/home/a/android-ndk-r19c/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64'
+export toolchain='/home/chris/github/the-toolchain'
 
 git checkout base-11.6.0
 ./configure

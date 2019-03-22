@@ -13,7 +13,7 @@ TOOLCHAIN_NAME="$SUFFIX"
 
 # Add the standalone toolchain to the search path.
 # toolchain='/home/a/android-ndk-r19c/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64'
-toolchain='/home/a/android-ndk-r19c/toolchain'
+toolchain='/home/chris/github/the-toolchain'
 export PATH="$PATH:$toolchain:/bin"
 export toolchain_bin="$toolchain/bin"
 
@@ -29,7 +29,7 @@ export STRIP=$target_host-strip
 # Tell configure what flags Android requires.
 # export CFLAGS="-fPIE -fPIC -static-libstdc++"
 export CFLAGS="-fPIE -fPIC -static-libstdc++ -I/home/a/android-ndk-r19c/sysroot/usr/include"
-export LDFLAGS="-pie"
+export LDFLAGS="-pie -L$toolchain/sysroot/usr/lib/aarch64-linux-android/21/libandroid.so"
 
 
 GYP_DEFINES="target_arch=$ARCH"
