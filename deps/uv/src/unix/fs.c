@@ -29,6 +29,8 @@
 #include "uv.h"
 #include "internal.h"
 
+#include "android_file.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1136,6 +1138,8 @@ static ssize_t uv__fs_write_all(uv_fs_t* req) {
 }
 
 
+
+
 static void uv__fs_work(struct uv__work* w) {
   int retry_on_eintr;
   uv_fs_t* req;
@@ -1153,37 +1157,67 @@ static void uv__fs_work(struct uv__work* w) {
     r = action;                                                               \
     break;
 
-    switch (req->fs_type) {
-    X(ACCESS, access(req->path, req->flags));
-    X(CHMOD, chmod(req->path, req->mode));
-    X(CHOWN, chown(req->path, req->uid, req->gid));
-    X(CLOSE, close(req->file));
-    X(COPYFILE, uv__fs_copyfile(req));
-    X(FCHMOD, fchmod(req->file, req->mode));
-    X(FCHOWN, fchown(req->file, req->uid, req->gid));
-    X(LCHOWN, lchown(req->path, req->uid, req->gid));
-    X(FDATASYNC, uv__fs_fdatasync(req));
-    X(FSTAT, uv__fs_fstat(req->file, &req->statbuf));
-    X(FSYNC, uv__fs_fsync(req));
-    X(FTRUNCATE, ftruncate(req->file, req->off));
-    X(FUTIME, uv__fs_futime(req));
-    X(LSTAT, uv__fs_lstat(req->path, &req->statbuf));
-    X(LINK, link(req->path, req->new_path));
-    X(MKDIR, mkdir(req->path, req->mode));
-    X(MKDTEMP, uv__fs_mkdtemp(req));
-    X(OPEN, uv__fs_open(req));
-    X(READ, uv__fs_read(req));
-    X(SCANDIR, uv__fs_scandir(req));
-    X(READLINK, uv__fs_readlink(req));
-    X(REALPATH, uv__fs_realpath(req));
-    X(RENAME, rename(req->path, req->new_path));
-    X(RMDIR, rmdir(req->path));
-    X(SENDFILE, uv__fs_sendfile(req));
-    X(STAT, uv__fs_stat(req->path, &req->statbuf));
-    X(SYMLINK, symlink(req->path, req->new_path));
-    X(UNLINK, unlink(req->path));
-    X(UTIME, uv__fs_utime(req));
-    X(WRITE, uv__fs_write_all(req));
+    switch (req->fs_type) { // XXX
+    // X(ACCESS, access(req->path, req->flags));
+    X(ACCESS, android_access(req->path, req->flags));
+    // X(CHMOD, chmod(req->path, req->mode));
+    X(CHMOD, android_chmod(req->path, req->mode));
+    // X(CHOWN, chown(req->path, req->uid, req->gid));
+    X(CHOWN, android_chown(req->path, req->uid, req->gid));
+    // X(CLOSE, close(req->file));
+    X(CLOSE, android_close(req->file));
+    // X(COPYFILE, uv__fs_copyfile(req));
+    X(COPYFILE, android_copyfile(req));
+    // X(FCHMOD, fchmod(req->file, req->mode));
+    X(FCHMOD, android_fchmod(req->file, req->mode));
+    // X(FCHOWN, fchown(req->file, req->uid, req->gid));
+    X(FCHOWN, android_fchown(req->file, req->uid, req->gid));
+    // X(LCHOWN, lchown(req->path, req->uid, req->gid));
+    X(LCHOWN, android_lchown(req->path, req->uid, req->gid));
+    // X(FDATASYNC, uv__fs_fdatasync(req));
+    X(FDATASYNC, android_fdatasync(req));
+    // X(FSTAT, uv__fs_fstat(req->file, &req->statbuf));
+    X(FSTAT, android_fstat(req->file, &req->statbuf));
+    // X(FSYNC, uv__fs_fsync(req));
+    X(FSYNC, android_fsync(req));
+    // X(FTRUNCATE, ftruncate(req->file, req->off));
+    X(FTRUNCATE, android_ftruncate(req->file, req->off));
+    // X(FUTIME, uv__fs_futime(req));
+    X(FUTIME, android_futime(req));
+    // X(LSTAT, uv__fs_lstat(req->path, &req->statbuf));
+    X(LSTAT, android_lstat(req->path, &req->statbuf));
+    // X(LINK, link(req->path, req->new_path));
+    X(LINK, android_link(req->path, req->new_path));
+    // X(MKDIR, mkdir(req->path, req->mode));
+    X(MKDIR, android_mkdir(req->path, req->mode));
+    // X(MKDTEMP, uv__fs_mkdtemp(req));
+    X(MKDTEMP, android_mkdtemp(req));
+    // X(OPEN, uv__fs_open(req));
+    X(OPEN, android_open(req));
+    // X(READ, uv__fs_read(req));
+    X(READ, android_read(req));
+    // X(SCANDIR, uv__fs_scandir(req));
+    X(SCANDIR, android_scandir(req));
+    // X(READLINK, uv__fs_readlink(req));
+    X(READLINK, android_readlink(req));
+    // X(REALPATH, uv__fs_realpath(req));
+    X(REALPATH, android_realpath(req));
+    // X(RENAME, rename(req->path, req->new_path));
+    X(RENAME, android_rename(req->path, req->new_path));
+    // X(RMDIR, rmdir(req->path));
+    X(RMDIR, android_rmdir(req->path));
+    // X(SENDFILE, uv__fs_sendfile(req));
+    X(SENDFILE, android_sendfile(req));
+    // X(STAT, uv__fs_stat(req->path, &req->statbuf));
+    X(STAT, android_stat(req->path, &req->statbuf));
+    // X(SYMLINK, symlink(req->path, req->new_path));
+    X(SYMLINK, android_symlink(req->path, req->new_path));
+    // X(UNLINK, unlink(req->path));
+    X(UNLINK, android_unlink(req->path));
+    // X(UTIME, uv__fs_utime(req));
+    X(UTIME, android_utime(req));
+    // X(WRITE, uv__fs_write_all(req));
+    X(WRITE, android_write_all(req));
     default: abort();
     }
 #undef X
