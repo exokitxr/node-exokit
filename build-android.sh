@@ -11,7 +11,7 @@ git checkout 11.6.0-android
 
 # rm -Rf out
 ./android-configure
-make 
+make -j4
 
 rm -f libnode.a
 "$toolchain/bin/aarch64-linux-android-ar" -M <libnode.mri
