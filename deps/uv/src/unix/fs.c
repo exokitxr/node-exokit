@@ -29,8 +29,6 @@
 #include "uv.h"
 #include "internal.h"
 
-#include "android_file.h"
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +44,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+
+#include "android_file.h"
 
 #if defined(__DragonFly__)        ||                                      \
     defined(__FreeBSD__)          ||                                      \

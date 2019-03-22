@@ -1,6 +1,58 @@
 #include <uv.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h> /* PATH_MAX */
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/uio.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <poll.h>
+
 #include <jni.h>
 #include <android/asset_manager_jni.h>
+#ifdef __cplusplus
+}
+#endif
+
+int uv__getiovmax(void);
+void* uv__malloc(size_t size);
+
+static ssize_t uv__fs_copyfile(uv_fs_t* req);
+static ssize_t uv__fs_fdatasync(uv_fs_t* req);
+static int uv__fs_fstat(int fd, uv_stat_t *buf);
+static ssize_t uv__fs_fsync(uv_fs_t* req);
+static ssize_t uv__fs_futime(uv_fs_t* req);
+static int uv__fs_lstat(const char *path, uv_stat_t *buf);
+static ssize_t uv__fs_mkdtemp(uv_fs_t* req);
+static ssize_t uv__fs_open(uv_fs_t* req);
+static ssize_t uv__fs_read(uv_fs_t* req);
+static ssize_t uv__fs_scandir(uv_fs_t* req);
+static ssize_t uv__fs_readlink(uv_fs_t* req);
+static ssize_t uv__fs_pathmax_size(const char* path);
+static ssize_t uv__fs_realpath(uv_fs_t* req);
+static ssize_t uv__fs_sendfile(uv_fs_t* req);
+static int uv__fs_stat(const char *path, uv_stat_t *buf);
+static ssize_t uv__fs_utime(uv_fs_t* req);
+static ssize_t uv__fs_write_all(uv_fs_t* req);
+
+#if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_8)
+#define UV_CONST_DIRENT uv__dirent_t
+#else
+#define UV_CONST_DIRENT const uv__dirent_t
+#endif
+static int uv__fs_scandir_filter(UV_CONST_DIRENT* dent);
+static int uv__fs_scandir_sort(UV_CONST_DIRENT** a, UV_CONST_DIRENT** b);
 
 extern AAssetManager *android_asset_manager;
 void initAssetManager(JNIEnv *env, jobject assetManager);

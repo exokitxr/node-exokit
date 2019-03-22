@@ -26,15 +26,15 @@ const char *getPackageSubpath(const char *p) {
 int android_access(const char *pathname, int mode) {
   if (isPackagePath(pathname)) {
     const char *subpath = getPackageSubpath(pathname);
-    AAsset* asset = AAssetManager_open(mgr, subpath, AASSET_MODE_UNKNOWN);
+    AAsset* asset = AAssetManager_open(android_asset_manager, subpath, AASSET_MODE_UNKNOWN);
     if (asset) {
-      AAssetManager_close(asset);
-      return F_OK;
+      AAsset_close(asset);
+      return 0;
     } else {
-      AAssetDir *assetDir = AAssetManager_openDir(mgr, subpath);
+      AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, subpath);
       if (assetDir) {
         AAssetDir_close(assetDir);
-        return F_OK;
+        return 0;
       } else {
         errno = EACCES;
         return -1;
@@ -66,8 +66,8 @@ int android_chown(const char *pathname, uid_t owner, gid_t group) {
 int android_close(int fd) {
   auto iter = androidAssets.find(fd);
   if (iter != androidAssets.end()) {
-    const AAsset *asset = *iter;
-    AAssetManager_close(asset);
+    AAsset *asset = iter->second;
+    AAsset_close(asset);
     androidAssets.erase(iter);
     return 0;
   } else {
@@ -76,8 +76,8 @@ int android_close(int fd) {
 }
 
 ssize_t android_copyfile(uv_fs_t* req) {
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  const char *pathname = req->path;
+  if (isPackagePath(pathname)) {
     errno = ENOTSUP;
     return -1;
   } else {
@@ -115,6 +115,7 @@ int lchown(const char *path, uid_t owner, gid_t group) {
 }
 
 ssize_t android_fdatasync(uv_fs_t* req) {
+  int fd = req->file;
   auto iter = androidAssets.find(fd);
   if (iter != androidAssets.end()) {
     errno = EACCES;
@@ -124,11 +125,12 @@ ssize_t android_fdatasync(uv_fs_t* req) {
   }
 }
 
-int android_fstat(const char *path, uv_stat_t *buf) {
-  if (isPackagePath(path)) {
-    AAsset* asset = AAssetManager_open(mgr, subpath, AASSET_MODE_UNKNOWN);
+int android_fstat(int fd, uv_stat_t *buf) {
+  auto iter = androidAssets.find(fd);
+  if (iter != androidAssets.end()) {
+    AAsset* asset = iter->second;
 
-    if (asset) {
+    if (asset) { // XXX handle directory case
       uint64_t size = AAsset_getLength64(asset);
 
       memset(buf, 0, sizeof(*buf));
@@ -151,9 +153,11 @@ int android_fstat(const char *path, uv_stat_t *buf) {
       // buf->st_ctim = uv_timespec_t{0,0};
       // buf->st_birthtim = uv_timespec_t{0,0};
 
-      AAssetManager_close(asset);
+      AAsset_close(asset);
+
+      return 0;
     } else {
-      AAssetDir *assetDir = AAssetManager_openDir(mgr, subpath);
+      AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, nullptr);
       if (assetDir) {
         memset(buf, 0, sizeof(*buf));
 
@@ -176,17 +180,20 @@ int android_fstat(const char *path, uv_stat_t *buf) {
         // buf->st_birthtim = uv_timespec_t{0,0};
 
         AAssetDir_close(assetDir);
+
+        return 0;
       } else {
         errno = ENOENT;
         return -1;
       }
     }
   } else {
-    return uv__fs_fstat(path, buf);
+    return uv__fs_fstat(fd, buf);
   }
 }
 
 ssize_t android_fsync(uv_fs_t* req) {
+  int fd = req->file;
   auto iter = androidAssets.find(fd);
   if (iter != androidAssets.end()) {
     errno = EACCES;
@@ -197,16 +204,17 @@ ssize_t android_fsync(uv_fs_t* req) {
 }
 
 int android_ftruncate(int fd, off_t length) {
-  AAsset* asset = AAssetManager_open(mgr, file, AASSET_MODE_UNKNOWN);
-  if (asset) {
+  auto iter = androidAssets.find(fd);
+  if (iter != androidAssets.end()) {
     errno = EACCES;
     return -1;
   } else {
-    return ftruncate(fd);
+    return ftruncate(fd, length);
   }
 }
 
 ssize_t android_futime(uv_fs_t* req) {
+  int fd = req->file;
   auto iter = androidAssets.find(fd);
   if (iter != androidAssets.end()) {
     errno = EACCES;
@@ -242,14 +250,15 @@ int android_mkdir(const char *pathname, mode_t mode) {
   }
 }
 
-char *android_mkdtemp(char *templ) {
-  return uv__fs_mkdtemp(templ);
+ssize_t android_mkdtemp(uv_fs_t* req) {
+  return uv__fs_mkdtemp(req);
 }
 
 ssize_t android_open(uv_fs_t* req) {
   const char *pathname = req->path;
   if (isPackagePath(pathname)) {
-    AAsset* asset = AAssetManager_open(mgr, file, AASSET_MODE_UNKNOWN);
+    const char *subpath = getPackageSubpath(pathname);
+    AAsset* asset = AAssetManager_open(android_asset_manager, subpath, AASSET_MODE_UNKNOWN);
     if (asset) {
       int fd = androidAssetId++;
       androidAssets[fd] = asset;
@@ -264,9 +273,10 @@ ssize_t android_open(uv_fs_t* req) {
 }
 
 ssize_t android_read(uv_fs_t* req) {
+  int fd = req->file;
   auto iter = androidAssets.find(fd);
   if (iter != androidAssets.end()) {
-    AAsset *asset = *iter;
+    AAsset *asset = iter->second;
 
     unsigned int iovmax = uv__getiovmax();
     if (req->nbufs > iovmax) {
@@ -296,7 +306,7 @@ ssize_t android_scandir(uv_fs_t* req) {
   const char *pathname = req->path;
   if (pathname) {
     const char *subpath = getPackageSubpath(pathname);
-    AAssetDir *assetDir = AAssetManager_openDir(mgr, subpath);
+    AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, subpath);
     if (assetDir) {
       scandirDirents.clear();
 
@@ -316,13 +326,15 @@ ssize_t android_scandir(uv_fs_t* req) {
       }
 
       std::sort(scandirDirents.begin(), scandirDirents.end(), [](const uv__dirent_t &a, const uv__dirent_t &b) {
-        return uv__fs_scandir_sort(a.d_name, b.d_name);
+        const uv__dirent_t *ap = &a;
+        const uv__dirent_t *bp = &b;
+        return uv__fs_scandir_sort(&ap, &bp);
       });
 
       req->ptr = scandirDirents.data();
       req->nbufs = 0;
 
-      return filenames.size();
+      return scandirDirents.size();
     } else {
       errno = ENOENT;
       return -1;
@@ -335,9 +347,10 @@ ssize_t android_scandir(uv_fs_t* req) {
 ssize_t android_readlink(uv_fs_t* req) {
   const char *pathname = req->path;
   if (isPackagePath(pathname)) {
-    AAsset* asset = AAssetManager_open(mgr, subpath, AASSET_MODE_UNKNOWN);
+    const char *subpath = getPackageSubpath(pathname);
+    AAsset* asset = AAssetManager_open(android_asset_manager, subpath, AASSET_MODE_UNKNOWN);
     if (asset) {
-      AAssetManager_close(asset);
+      AAsset_close(asset);
 
       errno = EINVAL;
       return -1;
@@ -353,14 +366,19 @@ ssize_t android_readlink(uv_fs_t* req) {
 ssize_t android_realpath(uv_fs_t* req) {
   const char *pathname = req->path;
   if (isPackagePath(pathname)) {
-    return pathname;
+    ssize_t len = uv__fs_pathmax_size(req->path);
+    char* buf = (char *)uv__malloc(len + 1);
+
+    req->ptr = buf;
+
+    return 0;
   } else {
-    return uv__fs_realpath(pathname);
+    return uv__fs_realpath(req);
   }
 }
 
 int android_rename(const char *oldpath, const char *newpath) {
-  if (isPackagePath(path)) {
+  if (isPackagePath(oldpath) || isPackagePath(newpath)) {
     errno = EACCES;
     return -1;
   } else {
@@ -378,6 +396,9 @@ int android_rmdir(const char *path) {
 }
 
 ssize_t android_sendfile(uv_fs_t* req) {
+  int in_fd = req->flags;
+  int out_fd = req->file;
+
   auto iter1 = androidAssets.find(out_fd);
   auto iter2 = androidAssets.find(in_fd);
   if (iter1 != androidAssets.end() || iter2 != androidAssets.end()) {
@@ -389,7 +410,7 @@ ssize_t android_sendfile(uv_fs_t* req) {
 }
 
 int android_stat(const char *path, uv_stat_t *buf) {
-  if (isPackagePath(target)) {
+  if (isPackagePath(path)) {
     errno = EACCES;
     return -1;
   } else {
@@ -416,8 +437,8 @@ int android_unlink(const char *pathname) {
 }
 
 ssize_t android_utime(uv_fs_t* req) {
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  const char *pathname = req->path;
+  if (isPackagePath(pathname)) {
     errno = EACCES;
     return -1;
   } else {
@@ -426,6 +447,7 @@ ssize_t android_utime(uv_fs_t* req) {
 }
 
 ssize_t android_write_all(uv_fs_t* req) {
+  int fd = req->file;
   auto iter = androidAssets.find(fd);
   if (iter != androidAssets.end()) {
     errno = EACCES;
