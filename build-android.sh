@@ -1,15 +1,15 @@
 #!/bin/bash
 
-export toolchain="/home/chris/github/the-toolchain"
+export toolchain='/home/a/android-ndk-r19c/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64'
 
 git checkout base-11.6.0
 ./configure
 make 
 cp out/Release/torque .
 
-git checkout 11.6.0
+git checkout 11.6.0-android
 
-rm -Rf out
+# rm -Rf out
 ./android-configure
 make 
 

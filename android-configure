@@ -12,8 +12,10 @@ TOOLCHAIN_NAME="$SUFFIX"
 
 
 # Add the standalone toolchain to the search path.
-export PATH=$PATH:/home/chris/github/the-toolchain/bin
-export toolchain_bin=/home/chris/github/the-toolchain/bin
+# toolchain='/home/a/android-ndk-r19c/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64'
+toolchain='/home/a/android-ndk-r19c/toolchain'
+export PATH="$PATH:$toolchain:/bin"
+export toolchain_bin="$toolchain/bin"
 
 # Tell configure what tools to use.
 target_host=$toolchain_bin/aarch64-linux-android
