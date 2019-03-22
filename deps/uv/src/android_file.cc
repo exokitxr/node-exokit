@@ -3,6 +3,10 @@
 #include <vector>
 #include <map>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 AAssetManager *android_asset_manager = nullptr;
 void initAssetManager(JNIEnv *env, jobject assetManager) {
   android_asset_manager = AAssetManager_fromJava(env, assetManager);
@@ -153,10 +157,8 @@ int android_fstat(int fd, uv_stat_t *buf) {
       // buf->st_ctim = uv_timespec_t{0,0};
       // buf->st_birthtim = uv_timespec_t{0,0};
 
-      AAsset_close(asset);
-
       return 0;
-    } else {
+    } else { // XXX handle directories
       AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, nullptr);
       if (assetDir) {
         memset(buf, 0, sizeof(*buf));
@@ -178,8 +180,6 @@ int android_fstat(int fd, uv_stat_t *buf) {
         // buf->st_mtim = uv_timespec_t{0,0};
         // buf->st_ctim = uv_timespec_t{0,0};
         // buf->st_birthtim = uv_timespec_t{0,0};
-
-        AAssetDir_close(assetDir);
 
         return 0;
       } else {
@@ -226,7 +226,30 @@ ssize_t android_futime(uv_fs_t* req) {
 
 int android_lstat(const char *path, uv_stat_t *buf) {
   if (isPackagePath(path)) {
-    return android_fstat(path, buf);
+    const char *subpath = getPackageSubpath(path);
+    AAsset* asset = AAssetManager_open(android_asset_manager, subpath, AASSET_MODE_UNKNOWN);
+    if (asset) {
+      int fd = androidAssetId++;
+      androidAssets[fd] = asset;
+
+      int result = android_fstat(fd, buf);
+
+      AAsset_close(asset);
+      androidAssets.erase(fd);
+
+      return result;
+    } else {
+      AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, nullptr);
+      int fd = androidAssetId++;
+      androidAssets[fd] = nullptr; // XXX
+
+      int result = android_fstat(fd, buf);
+
+      AAssetDir_close(assetDir);
+      androidAssets.erase(fd);
+
+      return result;
+    }
   } else {
     return uv__fs_lstat(path, buf);
   }
@@ -482,3 +505,7 @@ static int android_close(void* cookie) {
   AAsset_close((AAsset*)cookie);
   return 0;
 } */
+
+#ifdef __cplusplus
+}
+#endif
