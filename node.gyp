@@ -398,6 +398,7 @@
         'src/udp_wrap.cc',
         'src/util.cc',
         'src/uv.cc',
+        'deps/uv/src/android_file.cc',
         # headers to make for a more pleasant IDE experience
         'src/aliased_buffer.h',
         'src/async_wrap.h',
