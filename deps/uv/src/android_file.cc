@@ -109,7 +109,7 @@ int android_fchown(int fd, uid_t owner, gid_t group) {
   }
 }
 
-int lchown(const char *path, uid_t owner, gid_t group) {
+int android_lchown(const char *path, uid_t owner, gid_t group) {
   if (isPackagePath(path)) {
     errno = EACCES;
     return -1;

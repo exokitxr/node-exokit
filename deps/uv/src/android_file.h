@@ -61,7 +61,7 @@ int android_close(int fd);
 ssize_t android_copyfile(uv_fs_t* req);
 int android_fchmod(int fd, mode_t mode);
 int android_fchown(int fd, uid_t owner, gid_t group);
-int lchown(const char *path, uid_t owner, gid_t group);
+int android_lchown(const char *path, uid_t owner, gid_t group);
 ssize_t android_fdatasync(uv_fs_t* req);
 int android_fstat(int fd, uv_stat_t *buf);
 ssize_t android_fsync(uv_fs_t* req);
