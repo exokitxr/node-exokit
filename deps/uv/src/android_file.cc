@@ -1,5 +1,8 @@
 #include "android-file.h"
 
+#include <vector>
+#include <map>
+
 AAssetManager *android_asset_manager = nullptr;
 void initAssetManager(JNIEnv *env, jobject assetManager) {
   android_asset_manager = AAssetManager_fromJava(env, assetManager);
@@ -374,14 +377,14 @@ int android_rmdir(const char *path) {
   }
 }
 
-ssize_t android_sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
+ssize_t android_sendfile(uv_fs_t* req) {
   auto iter1 = androidAssets.find(out_fd);
   auto iter2 = androidAssets.find(in_fd);
   if (iter1 != androidAssets.end() || iter2 != androidAssets.end()) {
     errno = EACCES;
     return -1;
   } else {
-    return uv__fs_sendfile(out_fd, in_fd, offset, count);
+    return uv__fs_sendfile(req);
   }
 }
 
