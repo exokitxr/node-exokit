@@ -1,6 +1,6 @@
 #include <uv.h>
 #include <jni.h>
-#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 
 extern AAssetManager *android_asset_manager;
 void initAssetManager(JNIEnv *env, jobject assetManager);
