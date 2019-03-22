@@ -21,7 +21,7 @@ ssize_t android_futime(uv_fs_t* req);
 int android_lstat(const char *path, uv_stat_t *buf);
 int android_link(const char *oldpath, const char *newpath);
 int android_mkdir(const char *pathname, mode_t mode);
-char *android_mkdtemp(char *template);
+char *android_mkdtemp(char *templ);
 ssize_t android_open(uv_fs_t* req);
 ssize_t android_read(uv_fs_t* req);
 ssize_t android_scandir(uv_fs_t* req);

@@ -242,8 +242,8 @@ int android_mkdir(const char *pathname, mode_t mode) {
   }
 }
 
-char *android_mkdtemp(char *template) {
-  return uv__fs_mkdtemp(template);
+char *android_mkdtemp(char *templ) {
+  return uv__fs_mkdtemp(templ);
 }
 
 ssize_t android_open(uv_fs_t* req) {
