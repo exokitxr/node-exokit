@@ -145,7 +145,7 @@ extern char *mkdtemp(char *template); /* See issue #740 on AIX < 7 */
   while (0)
 
 
-static ssize_t uv__fs_fsync(uv_fs_t* req) {
+ssize_t uv__fs_fsync(uv_fs_t* req) {
 #if defined(__APPLE__)
   /* Apple's fdatasync and fsync explicitly do NOT flush the drive write cache
    * to the drive platters. This is in contrast to Linux's fdatasync and fsync
@@ -166,7 +166,7 @@ static ssize_t uv__fs_fsync(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
+ssize_t uv__fs_fdatasync(uv_fs_t* req) {
 #if defined(__linux__) || defined(__sun) || defined(__NetBSD__)
   return fdatasync(req->file);
 #elif defined(__APPLE__)
@@ -178,7 +178,7 @@ static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_futime(uv_fs_t* req) {
+ssize_t uv__fs_futime(uv_fs_t* req) {
 #if defined(__linux__)                                                        \
     || defined(_AIX71)
   /* utimesat() has nanosecond resolution but we stick to microseconds
@@ -222,12 +222,12 @@ static ssize_t uv__fs_futime(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_mkdtemp(uv_fs_t* req) {
+ssize_t uv__fs_mkdtemp(uv_fs_t* req) {
   return mkdtemp((char*) req->path) ? 0 : -1;
 }
 
 
-static ssize_t uv__fs_open(uv_fs_t* req) {
+ssize_t uv__fs_open(uv_fs_t* req) {
   static int no_cloexec_support;
   int r;
 
@@ -265,7 +265,7 @@ static ssize_t uv__fs_open(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_read(uv_fs_t* req) {
+ssize_t uv__fs_read(uv_fs_t* req) {
 #if defined(__linux__)
   static int no_preadv;
 #endif
@@ -330,17 +330,17 @@ done:
 #endif
 
 
-static int uv__fs_scandir_filter(UV_CONST_DIRENT* dent) {
+int uv__fs_scandir_filter(UV_CONST_DIRENT* dent) {
   return strcmp(dent->d_name, ".") != 0 && strcmp(dent->d_name, "..") != 0;
 }
 
 
-static int uv__fs_scandir_sort(UV_CONST_DIRENT** a, UV_CONST_DIRENT** b) {
+int uv__fs_scandir_sort(UV_CONST_DIRENT** a, UV_CONST_DIRENT** b) {
   return strcmp((*a)->d_name, (*b)->d_name);
 }
 
 
-static ssize_t uv__fs_scandir(uv_fs_t* req) {
+ssize_t uv__fs_scandir(uv_fs_t* req) {
   uv__dirent_t **dents;
   int n;
 
@@ -374,7 +374,7 @@ static ssize_t uv__fs_scandir(uv_fs_t* req) {
 # define UV__FS_PATH_MAX UV__FS_PATH_MAX_FALLBACK
 #endif
 
-static ssize_t uv__fs_pathmax_size(const char* path) {
+ssize_t uv__fs_pathmax_size(const char* path) {
   ssize_t pathmax;
 
   pathmax = pathconf(path, _PC_PATH_MAX);
@@ -385,7 +385,7 @@ static ssize_t uv__fs_pathmax_size(const char* path) {
   return pathmax;
 }
 
-static ssize_t uv__fs_readlink(uv_fs_t* req) {
+ssize_t uv__fs_readlink(uv_fs_t* req) {
   ssize_t maxlen;
   ssize_t len;
   char* buf;
@@ -449,7 +449,7 @@ static ssize_t uv__fs_readlink(uv_fs_t* req) {
   return 0;
 }
 
-static ssize_t uv__fs_realpath(uv_fs_t* req) {
+ssize_t uv__fs_realpath(uv_fs_t* req) {
   char* buf;
 
 #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L
@@ -478,7 +478,7 @@ static ssize_t uv__fs_realpath(uv_fs_t* req) {
   return 0;
 }
 
-static ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
+ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
   struct pollfd pfd;
   int use_pread;
   off_t offset;
@@ -592,7 +592,7 @@ out:
 }
 
 
-static ssize_t uv__fs_sendfile(uv_fs_t* req) {
+ssize_t uv__fs_sendfile(uv_fs_t* req) {
   int in_fd;
   int out_fd;
 
@@ -691,7 +691,7 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_utime(uv_fs_t* req) {
+ssize_t uv__fs_utime(uv_fs_t* req) {
 #if defined(__linux__)                                                         \
     || defined(_AIX71)                                                         \
     || defined(__sun)
@@ -737,7 +737,7 @@ static ssize_t uv__fs_utime(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_write(uv_fs_t* req) {
+ssize_t uv__fs_write(uv_fs_t* req) {
 #if defined(__linux__)
   static int no_pwritev;
 #endif
@@ -797,7 +797,7 @@ done:
   return r;
 }
 
-static ssize_t uv__fs_copyfile(uv_fs_t* req) {
+ssize_t uv__fs_copyfile(uv_fs_t* req) {
 #if defined(__APPLE__) && !TARGET_OS_IPHONE
   /* On macOS, use the native copyfile(3). */
   static int can_clone;
@@ -966,7 +966,7 @@ out:
 #endif
 }
 
-static void uv__to_stat(struct stat* src, uv_stat_t* dst) {
+void uv__to_stat(struct stat* src, uv_stat_t* dst) {
   dst->st_dev = src->st_dev;
   dst->st_mode = src->st_mode;
   dst->st_nlink = src->st_nlink;
@@ -1043,7 +1043,7 @@ static void uv__to_stat(struct stat* src, uv_stat_t* dst) {
 }
 
 
-static int uv__fs_stat(const char *path, uv_stat_t *buf) {
+int uv__fs_stat(const char *path, uv_stat_t *buf) {
   struct stat pbuf;
   int ret;
 
@@ -1055,7 +1055,7 @@ static int uv__fs_stat(const char *path, uv_stat_t *buf) {
 }
 
 
-static int uv__fs_lstat(const char *path, uv_stat_t *buf) {
+int uv__fs_lstat(const char *path, uv_stat_t *buf) {
   struct stat pbuf;
   int ret;
 
@@ -1067,7 +1067,7 @@ static int uv__fs_lstat(const char *path, uv_stat_t *buf) {
 }
 
 
-static int uv__fs_fstat(int fd, uv_stat_t *buf) {
+int uv__fs_fstat(int fd, uv_stat_t *buf) {
   struct stat pbuf;
   int ret;
 
@@ -1078,7 +1078,7 @@ static int uv__fs_fstat(int fd, uv_stat_t *buf) {
   return ret;
 }
 
-static size_t uv__fs_buf_offset(uv_buf_t* bufs, size_t size) {
+size_t uv__fs_buf_offset(uv_buf_t* bufs, size_t size) {
   size_t offset;
   /* Figure out which bufs are done */
   for (offset = 0; size > 0 && bufs[offset].len <= size; ++offset)
@@ -1092,7 +1092,7 @@ static size_t uv__fs_buf_offset(uv_buf_t* bufs, size_t size) {
   return offset;
 }
 
-static ssize_t uv__fs_write_all(uv_fs_t* req) {
+ssize_t uv__fs_write_all(uv_fs_t* req) {
   unsigned int iovmax;
   unsigned int nbufs;
   uv_buf_t* bufs;
@@ -1140,7 +1140,7 @@ static ssize_t uv__fs_write_all(uv_fs_t* req) {
 
 
 
-static void uv__fs_work(struct uv__work* w) {
+void uv__fs_work(struct uv__work* w) {
   int retry_on_eintr;
   uv_fs_t* req;
   ssize_t r;
@@ -1236,7 +1236,7 @@ static void uv__fs_work(struct uv__work* w) {
 }
 
 
-static void uv__fs_done(struct uv__work* w, int status) {
+void uv__fs_done(struct uv__work* w, int status) {
   uv_fs_t* req;
 
   req = container_of(w, uv_fs_t, work_req);
