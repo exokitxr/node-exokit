@@ -1,26 +1,29 @@
 #include "android_file.h"
 
-#include <vector>
-#include <map>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-AAssetManager *android_asset_manager = nullptr;
+AAssetManager *android_asset_manager = NULL;
 void initAssetManager(JNIEnv *env, jobject assetManager) {
   android_asset_manager = AAssetManager_fromJava(env, assetManager);
 }
 
-std::map<int, AAsset *> androidAssets;
+typedef struct AndroidAssetStruct {
+  int fd;            /* we'll use this field as the key */
+  AAsset *asset;
+  UT_hash_handle hh; /* makes this structure hashable */
+} AndroidAsset;
+AndroidAsset *androidAssets = NULL;
+// std::map<int, AAsset *> androidAssets;
 int androidAssetId = 0x80000000;
-std::vector<uv__dirent_t> scandirDirents;
+uv__dirent_t scandirDirents[4096];
+// std::vector<uv__dirent_t> scandirDirents;
 const uint64_t blockSize = 4096;
+int scandirCmp(const void *a, const void*b) {
+  return uv__fs_scandir_sort(&a, &b);
+}
 
-bool startsWith(const char *pre, const char *str) {
+int startsWith(const char *pre, const char *str) {
   return strncmp(pre, str, strlen(pre)) == 0;
 }
-bool isPackagePath(const char *p) {
+int isPackagePath(const char *p) {
   return startsWith("/package", p);
 }
 const char *getPackageSubpath(const char *p) {
@@ -68,11 +71,13 @@ int android_chown(const char *pathname, uid_t owner, gid_t group) {
 }
 
 int android_close(int fd) {
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
-    AAsset *asset = iter->second;
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+
+  if (iter) {
+    AAsset *asset = iter->asset;
     AAsset_close(asset);
-    androidAssets.erase(iter);
+    HASH_DEL(androidAssets, iter);
     return 0;
   } else {
     return close(fd);
@@ -90,8 +95,9 @@ ssize_t android_copyfile(uv_fs_t* req) {
 }
 
 int android_fchmod(int fd, mode_t mode) {
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
     errno = EACCES;
     return -1;
   } else {
@@ -100,8 +106,9 @@ int android_fchmod(int fd, mode_t mode) {
 }
 
 int android_fchown(int fd, uid_t owner, gid_t group) {
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
     errno = EACCES;
     return -1;
   } else {
@@ -120,8 +127,9 @@ int android_lchown(const char *path, uid_t owner, gid_t group) {
 
 ssize_t android_fdatasync(uv_fs_t* req) {
   int fd = req->file;
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
     errno = EACCES;
     return -1;
   } else {
@@ -130,9 +138,10 @@ ssize_t android_fdatasync(uv_fs_t* req) {
 }
 
 int android_fstat(int fd, uv_stat_t *buf) {
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
-    AAsset* asset = iter->second;
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
+    AAsset* asset = iter->asset;
 
     if (asset) { // XXX handle directory case
       uint64_t size = AAsset_getLength64(asset);
@@ -159,7 +168,7 @@ int android_fstat(int fd, uv_stat_t *buf) {
 
       return 0;
     } else { // XXX handle directories
-      AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, nullptr);
+      AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, NULL);
       if (assetDir) {
         memset(buf, 0, sizeof(*buf));
 
@@ -194,8 +203,9 @@ int android_fstat(int fd, uv_stat_t *buf) {
 
 ssize_t android_fsync(uv_fs_t* req) {
   int fd = req->file;
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
     errno = EACCES;
     return -1;
   } else {
@@ -204,8 +214,9 @@ ssize_t android_fsync(uv_fs_t* req) {
 }
 
 int android_ftruncate(int fd, off_t length) {
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
     errno = EACCES;
     return -1;
   } else {
@@ -215,8 +226,9 @@ int android_ftruncate(int fd, off_t length) {
 
 ssize_t android_futime(uv_fs_t* req) {
   int fd = req->file;
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
     errno = EACCES;
     return -1;
   } else {
@@ -230,23 +242,29 @@ int android_lstat(const char *path, uv_stat_t *buf) {
     AAsset* asset = AAssetManager_open(android_asset_manager, subpath, AASSET_MODE_UNKNOWN);
     if (asset) {
       int fd = androidAssetId++;
-      androidAssets[fd] = asset;
+      AndroidAsset *iter = malloc(sizeof(AndroidAsset));
+      iter->asset = asset;
+      HASH_ADD_INT(androidAssets, fd, iter);
 
       int result = android_fstat(fd, buf);
 
       AAsset_close(asset);
-      androidAssets.erase(fd);
+      HASH_DEL(androidAssets, iter);
+      free(iter);
 
       return result;
     } else {
-      AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, nullptr);
+      AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, NULL);
       int fd = androidAssetId++;
-      androidAssets[fd] = nullptr; // XXX
+      AndroidAsset *iter = malloc(sizeof(AndroidAsset));
+      iter->asset = (AAssetDir *)assetDir;
+      HASH_ADD_INT(androidAssets, fd, iter);
 
       int result = android_fstat(fd, buf);
 
       AAssetDir_close(assetDir);
-      androidAssets.erase(fd);
+      HASH_DEL(androidAssets, iter);
+      free(iter);
 
       return result;
     }
@@ -284,7 +302,9 @@ ssize_t android_open(uv_fs_t* req) {
     AAsset* asset = AAssetManager_open(android_asset_manager, subpath, AASSET_MODE_UNKNOWN);
     if (asset) {
       int fd = androidAssetId++;
-      androidAssets[fd] = asset;
+      AndroidAsset *iter = malloc(sizeof(AndroidAsset));
+      iter->asset = asset;
+      HASH_ADD_INT(androidAssets, fd, iter);
       return fd;
     } else {
       errno = ENOENT;
@@ -297,9 +317,10 @@ ssize_t android_open(uv_fs_t* req) {
 
 ssize_t android_read(uv_fs_t* req) {
   int fd = req->file;
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
-    AAsset *asset = iter->second;
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
+    AAsset *asset = iter->asset;
 
     unsigned int iovmax = uv__getiovmax();
     if (req->nbufs > iovmax) {
@@ -331,33 +352,28 @@ ssize_t android_scandir(uv_fs_t* req) {
     const char *subpath = getPackageSubpath(pathname);
     AAssetDir *assetDir = AAssetManager_openDir(android_asset_manager, subpath);
     if (assetDir) {
-      scandirDirents.clear();
-
-      for (;;) {
+      int i;
+      for (i = 0;; i++) {
         const char *filename = AAssetDir_getNextFileName(assetDir);
         if (filename) {
           uv__dirent_t dirent;
           dirent.d_ino = 1;
-          dirent.d_off = scandirDirents.size();
+          dirent.d_off = i;
           dirent.d_reclen = sizeof(dirent);
           strncpy(dirent.d_name, filename, sizeof(dirent.d_name));
 
-          scandirDirents.push_back(dirent);
+          scandirDirents[i] = dirent;
         } else {
           break;
         }
       }
 
-      std::sort(scandirDirents.begin(), scandirDirents.end(), [](const uv__dirent_t &a, const uv__dirent_t &b) {
-        const uv__dirent_t *ap = &a;
-        const uv__dirent_t *bp = &b;
-        return uv__fs_scandir_sort(&ap, &bp);
-      });
+      qsort(scandirDirents, i, sizeof(scandirDirents[0]), scandirCmp);
 
-      req->ptr = scandirDirents.data();
+      req->ptr = scandirDirents;
       req->nbufs = 0;
 
-      return scandirDirents.size();
+      return i;
     } else {
       errno = ENOENT;
       return -1;
@@ -422,9 +438,11 @@ ssize_t android_sendfile(uv_fs_t* req) {
   int in_fd = req->flags;
   int out_fd = req->file;
 
-  auto iter1 = androidAssets.find(out_fd);
-  auto iter2 = androidAssets.find(in_fd);
-  if (iter1 != androidAssets.end() || iter2 != androidAssets.end()) {
+  AndroidAsset *iter1;
+  HASH_FIND_INT(androidAssets, &out_fd, iter1);
+  AndroidAsset *iter2;
+  HASH_FIND_INT(androidAssets, &in_fd, iter2);
+  if (iter1 || iter2) {
     errno = EACCES;
     return -1;
   } else {
@@ -471,8 +489,9 @@ ssize_t android_utime(uv_fs_t* req) {
 
 ssize_t android_write_all(uv_fs_t* req) {
   int fd = req->file;
-  auto iter = androidAssets.find(fd);
-  if (iter != androidAssets.end()) {
+  AndroidAsset *iter;
+  HASH_FIND_INT(androidAssets, &fd, iter);
+  if (iter) {
     errno = EACCES;
     return -1;
   } else {
@@ -505,7 +524,3 @@ static int android_close(void* cookie) {
   AAsset_close((AAsset*)cookie);
   return 0;
 } */
-
-#ifdef __cplusplus
-}
-#endif

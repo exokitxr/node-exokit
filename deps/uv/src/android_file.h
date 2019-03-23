@@ -1,8 +1,5 @@
 #include <uv.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +15,8 @@ extern "C" {
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+
+#include <uthash.h>
 
 #include <jni.h>
 #include <android/asset_manager_jni.h>
@@ -84,7 +83,3 @@ int android_symlink(const char *target, const char *linkpath);
 int android_unlink(const char *pathname);
 ssize_t android_utime(uv_fs_t* req);
 ssize_t android_write_all(uv_fs_t* req);
-
-#ifdef __cplusplus
-}
-#endif
