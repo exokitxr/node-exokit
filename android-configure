@@ -27,8 +27,8 @@ export LD=$target_host-ld
 export STRIP=$target_host-strip
 
 # Tell configure what flags Android requires.
-# export CFLAGS="-fPIE -fPIC -static-libstdc++"
-export CFLAGS="-fPIE -fPIC -static-libstdc++ -I/home/a/android-ndk-r19c/sysroot/usr/include"
+export CFLAGS="-fPIE -fPIC -static-libstdc++"
+# export CFLAGS="-fPIE -fPIC -static-libstdc++ -I/home/a/android-ndk-r19c/sysroot/usr/include"
 export LDFLAGS="-pie"
 
 
