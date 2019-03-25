@@ -138,6 +138,8 @@ IsolateData::IsolateData(Isolate* isolate,
 
 void InitThreadLocalOnce() {
   CHECK_EQ(0, uv_key_create(&Environment::thread_local_env));
+  CHECK_EQ(0, uv_key_create(&Environment::thread_local_loop));
+  CHECK_EQ(0, uv_key_create(&Environment::thread_local_isolate));
 }
 
 void Environment::TrackingTraceStateObserver::UpdateTraceCategoryState() {
@@ -361,6 +363,8 @@ void Environment::InitializeLibuv(bool start_profiler_idle_notifier) {
   static uv_once_t init_once = UV_ONCE_INIT;
   uv_once(&init_once, InitThreadLocalOnce);
   uv_key_set(&thread_local_env, this);
+  uv_key_set(&thread_local_loop, event_loop());
+  uv_key_set(&thread_local_isolate, isolate());
 }
 
 void Environment::ExitEnv() {
@@ -900,6 +904,8 @@ void Environment::AsyncHooks::grow_async_ids_stack() {
 }
 
 uv_key_t Environment::thread_local_env = {};
+uv_key_t Environment::thread_local_loop = {};
+uv_key_t Environment::thread_local_isolate = {};
 
 void Environment::Exit(int exit_code) {
   if (is_main_thread()) {

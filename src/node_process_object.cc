@@ -222,4 +222,17 @@ MaybeLocal<Object> CreateProcessObject(
   return scope.Escape(process);
 }
 
+void GetLoop(const v8::FunctionCallbackInfo<Value>& args) {
+  uv_loop_t *loop = Environment::GetThreadLocalLoop();
+  uintptr_t loopPtr = (uintptr_t )loop;
+  uint32_t a = (uint32_t)((loopPtr >> 32) & 0xFFFFFFFF);
+  uint32_t b = (uint32_t)(loopPtr & 0xFFFFFFFF);
+
+  Isolate* isolate = Environment::GetThreadLocalIsolate();
+  Local<v8::Array> result = v8::Array::New(isolate, 2);
+  result->Set(0, Integer::NewFromUnsigned(isolate, a));
+  result->Set(1, Integer::NewFromUnsigned(isolate, b));
+  args.GetReturnValue().Set(result);
+}
+
 }  // namespace node

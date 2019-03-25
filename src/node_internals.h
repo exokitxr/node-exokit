@@ -336,6 +336,8 @@ class DiagnosticFilename {
   std::string filename_;
 };
 
+void GetLoop(const v8::FunctionCallbackInfo<v8::Value>& args);
+
 }  // namespace node
 
 #endif  // defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS

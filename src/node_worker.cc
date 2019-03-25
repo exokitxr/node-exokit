@@ -283,6 +283,9 @@ void Worker::Run() {
         Debug(this, "Created message port for worker %llu", thread_id_);
       }
 
+      uv_key_set(&Environment::thread_local_loop, &data.loop_);
+      uv_key_set(&Environment::thread_local_isolate, &isolate_);
+
       if (is_stopped()) return;
       {
 #if NODE_USE_V8_PLATFORM && HAVE_INSPECTOR
