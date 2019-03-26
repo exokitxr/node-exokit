@@ -449,7 +449,7 @@
         'target_conditions': [
           ['_toolset=="target"', {
             'defines': [ '_GLIBCXX_USE_C99_MATH' ],
-            'libraries': [ '-llog' ],
+            'libraries': [ '-llog', '-landroid'],
           }],
         ],
       }],
