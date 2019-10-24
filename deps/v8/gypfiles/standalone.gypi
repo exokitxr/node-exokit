@@ -1165,7 +1165,7 @@
               '-nostdlib',
             ],
             'libraries!': [
-                '-lrt',  # librt is built into Bionic.
+                # '-lrt',  # librt is built into Bionic.
                 # Not supported by Android toolchain.
                 # Where do these come from?  Can't find references in
                 # any Chromium gyp or gypi file.  Maybe they come from
